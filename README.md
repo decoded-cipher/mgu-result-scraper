@@ -4,6 +4,8 @@ This simple project aims to get the result screenshots of a list of students fro
 - [UG Exam Results](https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/)
 - [PG Exam Results](https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3)
 
+![Demo](https://user-images.githubusercontent.com/44474792/174436549-32713b4f-8140-4266-b3e5-6bde4ee1e982.gif)
+
 ### Installation
 1. Clone this repository
 ```sh
