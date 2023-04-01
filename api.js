@@ -1,7 +1,12 @@
 const { chromium } = require("playwright");
-
+const nodemailer = require("nodemailer");
 const PDFDocument = require('pdfkit');
+
 const fs = require('fs');
+const path = require('path');
+
+var htmlTemplate = path.join(__dirname, 'template/index.html');
+var htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
 
@@ -38,15 +43,16 @@ module.exports = {
         for (let i = 0; i < students.length; i++) {
         
             try {
+                var password = module.exports.generateCustomPassword(students[i]);
                 var doc = new PDFDocument({
                     margin: 0,
                     size: [850, 850],
                     info: {
-                        Title: 'MGU Result Scraper',
+                        Title: 'MCA 3rd Semester Results',
                         Author: 'Arjun Krishna',
 
                     },
-                    userPassword: 'password',
+                    userPassword: password,
                 });
 
                 var stream = fs.createWriteStream(`secure/${students[i].prn}.pdf`);
@@ -63,6 +69,60 @@ module.exports = {
     },
 
 
-    sendEmails : async (students) => {}
+    sendOutEmails : async (students) => {
+        console.log("\nStarting to send out emails...\n");
+        for (let i = 0; i < students.length; i++) {
+            await module.exports.sendEmail({
+                recipient: students[i].email,
+                prn: students[i].prn
+            });
+            console.log(`\nEmail sent to ${students[i].name}\n`);
+        }
+        console.log("\nAll emails sent!\n");
+    },
+
+
+    sendEmail : async (details) => {
+        
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        var mailOptions = {
+            from: `"Result Notification" <${process.env.EMAIL_USER}>`,
+            to: details.recipient,
+            subject: 'MCA 3rd Semester Results | Secure PDF Attached',
+            html: htmlToSend,
+            attachments: [
+                {
+                    filename: `${details.prn}.pdf`,
+                    path: `secure/${details.prn}.pdf`,
+                    contentType: 'application/pdf'
+                }
+            ],
+            headers: { 'x-myheader': 'test header' }
+        };
+        
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+    },
+
+
+    generateCustomPassword : (details) => {
+        var name = details.name;
+        var birthdate = details.dob;
+        var password = name.substring(0, 4).toUpperCase() + birthdate.substring(8, 10) + birthdate.substring(5, 7);
+        return password;
+    }
 
 };
