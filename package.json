@@ -13,6 +13,8 @@
     "nodemon": "^2.0.16"
   },
   "dependencies": {
+    "fs": "0.0.1-security",
+    "pdfkit": "^0.13.0",
     "playwright": "^1.22.2"
   }
 }

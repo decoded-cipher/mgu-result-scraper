@@ -1,8 +1,11 @@
 {
     "exam_id" : "58",
-    "prn" : [
-        "203242210987",
-        "203242211001",
-        "203242211046"
+    "students" : [
+        {
+            "name" : "Arjun Krishna",
+            "prn" : "203242211001",
+            "dob" : "1999-05-04",
+            "email" : "arjun12345krishna@gmail.com"
+        }
     ]
 }
