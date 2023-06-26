@@ -13,6 +13,10 @@
     "nodemon": "^2.0.16"
   },
   "dependencies": {
+    "dotenv": "^16.0.3",
+    "fs": "0.0.1-security",
+    "nodemailer": "^6.9.1",
+    "pdfkit": "^0.13.0",
     "playwright": "^1.22.2"
   }
 }
