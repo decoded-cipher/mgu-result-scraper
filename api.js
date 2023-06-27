@@ -10,6 +10,47 @@ var htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
 
+    fetchExamDetails : async () => {
+        let browser = await chromium.launch();
+        let page = await browser.newPage();
+        await page.setViewportSize({ width: 1000, height: 850 });
+
+        await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
+        // await page.goto("https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/");        
+        console.log("\n--- Results Page loaded ---");
+        
+        let optionsArray = [];
+        let selectBox = await page.$('select#exam_id');
+        let options = await selectBox.$$('option');
+        
+        for (let i = 1; i < options.length; i++) {
+            let exam_id = await options[i].getAttribute('value');
+            let exam_name = await options[i].innerText();
+            exam_name = exam_name.trim();
+            
+            let obj = {
+                exam_id: exam_id,
+                exam_name: exam_name
+            }
+            optionsArray.push(obj);
+        }
+        console.log("--- Exam details fetched ---");
+
+        if (fs.existsSync('exam_details.json')) {
+            fs.unlinkSync('exam_details.json');
+            console.log("--- Old JSON file deleted ---");
+        }
+        
+        fs.writeFileSync('exam_details.json', JSON.stringify(optionsArray), (err) => {
+            if (err) throw err;
+        });
+        console.log("--- Exam details saved to JSON file ---");
+        
+        await browser.close();
+        console.log("--- Browser closed ---\n");
+    },
+
+
     getAllResults : async (students, exam_id) => {
         let browser = await chromium.launch();
         let page = await browser.newPage();
