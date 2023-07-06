@@ -1,5 +1,5 @@
 node_modules
-results
-secure
 .env
-exam_details.json
+public/screenshots
+public/secure_pdfs
+public/exam_details.json

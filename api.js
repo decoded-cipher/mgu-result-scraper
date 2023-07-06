@@ -5,7 +5,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-var htmlTemplate = path.join(__dirname, 'template/index.html');
+var htmlTemplate = path.join(__dirname, 'public/email_templates/index.html');
 var htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
@@ -41,12 +41,12 @@ module.exports = {
         });
         console.log("--- Sorted the array in desc order ---");
 
-        if (fs.existsSync('exam_details.json')) {
-            fs.unlinkSync('exam_details.json');
+        if (fs.existsSync('public/exam_details.json')) {
+            fs.unlinkSync('public/exam_details.json');
             console.log("--- Old JSON file deleted ---");
         }
 
-        fs.writeFileSync('exam_details.json', JSON.stringify(optionsArray), (err) => {
+        fs.writeFileSync('public/exam_details.json', JSON.stringify(optionsArray), (err) => {
             if (err) throw err;
         });
         console.log("--- Exam details saved to JSON file ---");
@@ -74,7 +74,7 @@ module.exports = {
 
             await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
             await page.screenshot({
-                path: `results/${students[i].prn}.png`,
+                path: `public/screenshots/${students[i].prn}.png`,
             });
             console.log(`Screenshot taken for ${students[i].name}`);
         }
@@ -101,9 +101,9 @@ module.exports = {
                     userPassword: password,
                 });
 
-                var stream = fs.createWriteStream(`secure/${students[i].prn}.pdf`);
+                var stream = fs.createWriteStream(`public/secure_pdfs/${students[i].prn}.pdf`);
                 doc.pipe(stream);
-                doc.image(`results/${students[i].prn}.png`, 0, 20, { width: 850, height: 850 });
+                doc.image(`public/screenshots/${students[i].prn}.png`, 0, 20, { width: 850, height: 850 });
                 doc.end();
             } catch (error) {
                 console.log(error);
@@ -146,7 +146,7 @@ module.exports = {
             attachments: [
                 {
                     filename: `${details.prn}.pdf`,
-                    path: `secure/${details.prn}.pdf`,
+                    path: `public/secure_pdfs/${details.prn}.pdf`,
                     contentType: 'application/pdf'
                 }
             ],
