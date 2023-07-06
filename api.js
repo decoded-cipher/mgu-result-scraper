@@ -29,18 +29,23 @@ module.exports = {
             exam_name = exam_name.trim();
             
             let obj = {
-                exam_id: exam_id,
+                exam_id: parseInt(exam_id),
                 exam_name: exam_name
             }
             optionsArray.push(obj);
         }
         console.log("--- Exam details fetched ---");
+        
+        optionsArray.sort((a, b) => {
+            return b.exam_id - a.exam_id;
+        });
+        console.log("--- Sorted the array in desc order ---");
 
         if (fs.existsSync('exam_details.json')) {
             fs.unlinkSync('exam_details.json');
             console.log("--- Old JSON file deleted ---");
         }
-        
+
         fs.writeFileSync('exam_details.json', JSON.stringify(optionsArray), (err) => {
             if (err) throw err;
         });
