@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const data = require('./public/data.json');
 const api = require('./api.js');
+const analytics = require('./analytics.js');
 
 (async () => {
     // await api.fetchExamDetails();
@@ -11,4 +12,9 @@ const api = require('./api.js');
     // await api.generatePDFs(data.students);
     // console.log("--- -------------------- ---");
     // await api.sendOutEmails(data.students);
+
+
+    // await analytics.getResult();
+    await analytics.processData();
+
 })();
