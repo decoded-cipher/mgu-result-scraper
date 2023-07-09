@@ -5,13 +5,13 @@ const { pattern } = require("pdfkit");
 
 module.exports = {
 
-    getResult : async () => {
+    fetchSubjectResults : async () => {
         let browser = await chromium.launch();
         let page = await browser.newPage();
 
         await page.setViewportSize({ width: 1000, height: 850 });
         await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
-        await page.selectOption('select#exam_id', "58");
+        await page.selectOption('select#exam_id', "155");
 
         await page.fill('#prn', "203242211001");
         await page.click('button#btnresult');
@@ -20,17 +20,24 @@ module.exports = {
         
         // get the result table
         const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
+        const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
         
         // get the result table html
         const resultTableHTML = await resultTable.innerHTML();
+        const studentDetailsHTML = await studentDetails.innerHTML();
 
-        // delete result.html if it exists
-        if (fs.existsSync(path.join(__dirname, 'public/analytics/result.html'))) {
-            fs.unlinkSync(path.join(__dirname, 'public/analytics/result.html'));
+
+        // create folder if it doesn't exist with the name as exam_id inside public/analytics
+        if (fs.existsSync(path.join(__dirname, `public/analytics/203242211001`))) {
+            fs.rmdirSync(path.join(__dirname, `public/analytics/203242211001`), { recursive: true });
         }
 
+        fs.mkdirSync(path.join(__dirname, `public/analytics/203242211001`));
+
+
         // write the result table html to a file
-        fs.writeFileSync(path.join(__dirname, 'public/analytics/result.html'), resultTableHTML);
+        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/examResult.html`), resultTableHTML);
+        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/studentDetails.html`), studentDetailsHTML);
 
         await browser.close();
     },
@@ -43,32 +50,34 @@ module.exports = {
 
 
 
-    processData : () => {
+    processSubjectResults : async () => {
 
-        let studentMarks = [];
-        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/result.html'), 'utf8');
+        let allSubjects = [];
+        let semester = {};
+        let flag = false;
+
+
+        // get table html from the file
+        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/examResult.html'), 'utf8');
+        
+        // remove comments and blank lines from the html
         let htmlWithoutComments = html.replace(/<!--[\s\S]*?-->/g, '');
-        // remove blank lines
         htmlWithoutComments = htmlWithoutComments.replace(/^\s*[\r\n]/gm, '');
 
-
-        // get the count of <tr> in the html
-        let totalDivCount = (htmlWithoutComments.match(/<tr/g) || []).length;
-        // console.log(totalDivCount);
-
-
+        
+        // remove height="30" from the html
+        // Because this pattern was causing descrepencieswhile searching for <td>...</td> (Semester Result)
+        htmlWithoutComments = htmlWithoutComments.replace(/ height="30"/g, '');
 
 
-        // fs.writeFileSync(path.join(__dirname, 'public/analytics/result-bkp.html'), htmlWithoutComments);
 
+        // loop through the html, following the pattern related to <tr>...</tr>
+        // This continues until SEMESTER RESULT is found in the first <td> of the <tr>
+        // Starts from 3rd <tr> because the first 2 <tr> are not needed as they are the headers
 
-        // run a loop for 8 times
-        // totalDivCount - (2 + 4 + 1)
+        for (let i = 3; flag == false; i++) {
 
-        for (let i = 3; i < ((totalDivCount + 3) - 7); i++) {
-
-
-            var pattern = '<tbody>[\\s\\S]*?';
+            let pattern = '<tbody>[\\s\\S]*?';
             for (let j = 0; j < i-1; j++) {
                 pattern = pattern + '<tr>[\\s\\S]*?';
             }
@@ -76,87 +85,112 @@ module.exports = {
             // console.log(pattern);
 
 
-            // get the first <td> in the <tr>
-            let subject_1 = htmlWithoutComments.match(pattern)[1];
-            // console.log(subject_1);
+            // get the first <tr> from the html (row)
+            let row = htmlWithoutComments.match(pattern)[1];
+            // console.log(row);
+
             
-
-            // remove all \n and \t
-            subject_1 = subject_1.replace(/\n/g, '');
-            subject_1 = subject_1.replace(/\t/g, '');
-
-
-            // count the string 'class="bord_rslt"' in the subject_1
-            let count = (subject_1.match(/class="bord_rslt"/g) || []).length;
-            // console.log(count);
-
-
-            // // get the string between > and </td> and store it in an array
-            let subject_1_data = subject_1.match(/>(.*?)<\/td>/g);
-            // console.log(subject_1_data);
+            // remove <strong> and </strong> from the html (row)
+            row = row.replace(/<strong>/g, '');
+            row = row.replace(/<\/strong>/g, '');
+            
+            
+            // remove all \n and \t from the html (row)
+            row = row.replace(/\n/g, '');
+            row = row.replace(/\t/g, '');
 
 
-            // remove <strong><span style="color:green;">
-            subject_1_data[11] = subject_1_data[11].replace(/<strong><span style="color:green;">/g, '');
+            // // get the string between > and </td> (column) and store it in an array
+            let column = row.match(/>(.*?)<\/td>/g);
+            // console.log(column[0]);
 
 
-            // remove </span</strong' from the end
-            subject_1_data[11] = subject_1_data[11].replace(/<\/span><\/strong>/g, '');
+            // if column[0] has SEMESTER RESULT then toggle the looping variable
+            if (column[0].includes('SEMESTER RESULT')) {
+                
+                flag = true;
+                // break;
+                
+                column[7] = column[7].replace(/<span style="color:#390;">/g, ''),
+                column[7] = column[7].replace(/<\/span>/g, '')
+            }
 
 
-            // loop through the subject_1_data array and remove the > and </td> from each element
-            for (let i = 0; i < subject_1_data.length; i++) {
-                subject_1_data[i] = subject_1_data[i].replace(/<\/?td>/g, '');
-                subject_1_data[i] = subject_1_data[i].replace(/>/g, '');
+            // remove <span style="color:green;" from the beginning and </span from the end, if its not the last row
+            !flag ? column[11] = column[11].replace(/<span style="color:green;">/g, '') : null;
+            !flag ? column[11] = column[11].replace(/<\/span>/g, '') : null;
+
+
+            // remove SCPA / SGPA:  from the beginning and tailing space from the end, if its the last row
+            flag ? column[1] = column[1].replace(/SCPA \/ SGPA: /g, '') : null;
+            flag ? column[1] = column[1].trim() : null;
+
+                
+            // loop through the column array and remove the > and </td> from each element
+            for (let i = 0; i < column.length; i++) {
+                column[i] = column[i].replace(/<\/?td>/g, '');
+                column[i] = column[i].replace(/>/g, '');
 
 
                 // also removespace from the beginning and end of the string
-                subject_1_data[i] = subject_1_data[i].trim();
-
-
                 // replace &amp; with &
-                subject_1_data[i] = subject_1_data[i].replace(/&amp;/g, '&');
+                // remove &nbsp;
+                column[i] = column[i].trim();
+                column[i] = column[i].replace(/&amp;/g, '&');
+                column[i] = column[i].replace(/&nbsp;/g, '');
 
 
                 // replace blank string with null
-                if (subject_1_data[i] == '') {
-                    subject_1_data[i] = null;
-                } else if (subject_1_data[i] == '---') {
-                    subject_1_data[i] = null;
+                if (column[i] == '') {
+                    column[i] = null;
+                } else if (column[i] == '---') {
+                    column[i] = null;
                 }
             }
-            // console.log(subject_1_data);
+            // console.log(column);
 
 
 
+            // convert the column array to an object and push it to allSubjects array
+            // if its the last row then create a semester object and save details
+            if (!flag) {
 
-
-
-            // convert the subject_1_data array to an object
-            let subject = {
-                course_code : subject_1_data[0],
-                course : subject_1_data[1],
-                external : {
-                    esa : subject_1_data[2] == null ? null : parseInt(subject_1_data[2]),
-                    max : subject_1_data[3] == null ? null : parseInt(subject_1_data[3]),
-                },
-                internal : {
-                    isa : subject_1_data[4] == null ? null : parseInt(subject_1_data[4]),
-                    max : subject_1_data[5] == null ? null : parseInt(subject_1_data[5]),
-                },
-                total : subject_1_data[6] == null ? null : parseInt(subject_1_data[6]),
-                max : subject_1_data[7] == null ? null : parseInt(subject_1_data[7]),
-                grade_points : subject_1_data[8] == null ? null : parseFloat(subject_1_data[8]),
-                credit_points : subject_1_data[9] == null ? null : parseFloat(subject_1_data[9]),
-                grade : subject_1_data[10],
-                result : subject_1_data[11]
-            };
-
-            studentMarks.push(subject);
+                let subject = {
+                    course_code : column[0],
+                    course : column[1],
+                    external : {
+                        esa : column[2] == null ? null : parseInt(column[2]),
+                        max : column[3] == null ? null : parseInt(column[3]),
+                    },
+                    internal : {
+                        isa : column[4] == null ? null : parseInt(column[4]),
+                        max : column[5] == null ? null : parseInt(column[5]),
+                    },
+                    total : column[6] == null ? null : parseInt(column[6]),
+                    max : column[7] == null ? null : parseInt(column[7]),
+                    grade_points : column[8] == null ? null : parseFloat(column[8]),
+                    credit_points : column[9] == null ? null : parseFloat(column[9]),
+                    grade : column[10],
+                    result : column[11]
+                };
+    
+                allSubjects.push(subject);
+            } else {
+                semester = {
+                    scpa : column[0] == null ? null : parseFloat(column[1]),
+                    total : column[2] == null ? null : parseInt(column[2]),
+                    max : column[3] == null ? null : parseInt(column[3]),
+                    grade_points : column[4],
+                    credit_points : column[5] == null ? null : parseFloat(column[5]),
+                    grade : column[6],
+                    result : column[7]
+                }
+            }
 
         }
 
-        console.log(studentMarks);
+        semester.subjects = allSubjects;
+        console.log(semester);
 
     }
 

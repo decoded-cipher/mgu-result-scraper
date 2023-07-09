@@ -5,8 +5,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-var htmlTemplate = path.join(__dirname, 'public/email_templates/index.html');
-var htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
+let htmlTemplate = path.join(__dirname, 'public/email_templates/index.html');
+let htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
 
@@ -89,8 +89,8 @@ module.exports = {
         for (let i = 0; i < students.length; i++) {
         
             try {
-                var password = module.exports.generateCustomPassword(students[i]);
-                var doc = new PDFDocument({
+                let password = module.exports.generateCustomPassword(students[i]);
+                let doc = new PDFDocument({
                     margin: 0,
                     size: [850, 850],
                     info: {
@@ -101,7 +101,7 @@ module.exports = {
                     userPassword: password,
                 });
 
-                var stream = fs.createWriteStream(`public/secure_pdfs/${students[i].prn}.pdf`);
+                let stream = fs.createWriteStream(`public/secure_pdfs/${students[i].prn}.pdf`);
                 doc.pipe(stream);
                 doc.image(`public/screenshots/${students[i].prn}.png`, 0, 20, { width: 850, height: 850 });
                 doc.end();
@@ -130,7 +130,7 @@ module.exports = {
 
     sendEmail : async (details) => {
         
-        var transporter = nodemailer.createTransport({
+        let transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
@@ -138,7 +138,7 @@ module.exports = {
             }
         });
 
-        var mailOptions = {
+        let mailOptions = {
             from: `"Result Notification" <${process.env.EMAIL_USER}>`,
             to: details.recipient,
             subject: 'MCA 3rd Semester Results | Secure PDF Attached',
@@ -165,9 +165,9 @@ module.exports = {
 
 
     generateCustomPassword : (details) => {
-        var name = details.name;
-        var birthdate = details.dob;
-        var password = name.substring(0, 4).toUpperCase() + birthdate.substring(8, 10) + birthdate.substring(5, 7);
+        let name = details.name;
+        let birthdate = details.dob;
+        let password = name.substring(0, 4).toUpperCase() + birthdate.substring(8, 10) + birthdate.substring(5, 7);
         return password;
     }
 
