@@ -14,8 +14,8 @@ const analytics = require('./analytics.js');
     // await api.sendOutEmails(data.students);
 
 
-    await analytics.fetchSubjectResults();
-    console.log("--- -------------------- ---");
-    await analytics.processSubjectResults();
+    // await analytics.fetchResults();
+    // console.log("--- -------------------- ---");
+    await analytics.processResults();
 
 })();

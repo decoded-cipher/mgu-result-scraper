@@ -5,13 +5,13 @@ const { pattern } = require("pdfkit");
 
 module.exports = {
 
-    fetchSubjectResults : async () => {
+    fetchResults : async () => {
         let browser = await chromium.launch();
         let page = await browser.newPage();
 
         await page.setViewportSize({ width: 1000, height: 850 });
         await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
-        await page.selectOption('select#exam_id', "155");
+        await page.selectOption('select#exam_id', "126");
 
         await page.fill('#prn', "203242211001");
         await page.click('button#btnresult');
@@ -36,8 +36,8 @@ module.exports = {
 
 
         // write the result table html to a file
-        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/examResult.html`), resultTableHTML);
-        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/studentDetails.html`), studentDetailsHTML);
+        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/result.html`), resultTableHTML);
+        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/details.html`), studentDetailsHTML);
 
         await browser.close();
     },
@@ -50,7 +50,7 @@ module.exports = {
 
 
 
-    processSubjectResults : async () => {
+    processResults : async () => {
 
         let allSubjects = [];
         let semester = {};
@@ -58,7 +58,7 @@ module.exports = {
 
 
         // get table html from the file
-        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/examResult.html'), 'utf8');
+        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/result.html'), 'utf8');
         
         // remove comments and blank lines from the html
         let htmlWithoutComments = html.replace(/<!--[\s\S]*?-->/g, '');
@@ -150,7 +150,6 @@ module.exports = {
             // console.log(column);
 
 
-
             // convert the column array to an object and push it to allSubjects array
             // if its the last row then create a semester object and save details
             if (!flag) {
@@ -173,8 +172,8 @@ module.exports = {
                     grade : column[10],
                     result : column[11]
                 };
-    
                 allSubjects.push(subject);
+    
             } else {
                 semester = {
                     scpa : column[0] == null ? null : parseFloat(column[1]),
@@ -189,10 +188,100 @@ module.exports = {
 
         }
 
-        semester.subjects = allSubjects;
+        // call processExamDetails() to get the general student/exam details
+        let studentDetails = await module.exports.processExamDetails();
+
+        semester = {
+            ...studentDetails,
+            result : {
+                ...semester,
+                subjects : allSubjects
+            },
+        }
         console.log(semester);
 
-    }
+        // save the semester object to a json file
+        fs.writeFileSync(path.join(__dirname, 'public/analytics/203242211001/semester.json'), JSON.stringify(semester));
+
+    },
+
+
+
+
+
+
+
+
+    processExamDetails : async () => {
+
+        let details = [];
+
+        // get table html from the file
+        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/details.html'), 'utf8');
+
+
+        // get the html between the inner <tbody> and </tbody>
+        let table = html.match(/<table[\s\S]*?<\/table>/g)[0];
+        table = table.match(/<tbody[\s\S]*?<\/tbody>/g)[0];
+        // console.log(table);
+
+
+        // remove all <strong> and </strong> from the html
+        table = table.replace(/<strong>/g, '');
+        table = table.replace(/<\/strong>/g, '');
+        // console.log(table);
+        
+
+        for (let i = 1; i < 6; i++) {
+
+            // create a pattern to get the <tr> (rows) from the html
+            let pattern = '<tbody>[\\s\\S]*?';
+            for (let j = 0; j < i-1; j++) {
+                pattern = pattern + '<tr>[\\s\\S]*?';
+            }
+            pattern = pattern + '<tr>([\\s\\S]*?)<\\/tr>';
+            // console.log(pattern);
+
+
+            // get the first <tr> from the html (row)
+            // get the string between > and </td> (column) and store it in an array
+            let row = table.match(pattern)[1];
+            let column = row.match(/>(.*?)<\/td>/g);
+
+
+            // remove > and </td> from the beginning and end of the string
+            // remove blank spaces from the beginning and end of the string
+            // replace &amp; with &
+            column[2] = column[2].replace(/<\/?td>/g, '');
+            column[2] = column[2].replace(/>/g, '');
+            column[2] = column[2].trim();
+            column[2] = column[2].replace(/&amp;/g, '&');
+
+
+            // convert the uppercase string to title case
+            if (column[2] == column[2].toUpperCase()) {
+                column[2] = column[2].replace(/\w\S*/g, (txt) => {
+                    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                });
+            }
+            
+            details.push(column[2]);
+            
+        }
+
+
+        // create an object with the details array
+        var studentDetails = {
+            prn : details[0],
+            name : details[1],
+            semester : details[2],
+            programme : details[3],
+            exam_centre : details[4]
+        };
+        
+        // console.log(studentDetails);
+        return studentDetails;
+    },
 
 
 
