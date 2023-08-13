@@ -5,7 +5,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-let htmlTemplate = path.join(__dirname, 'public/email_templates/index.html');
+let htmlTemplate = path.join(__dirname, '../public/email_templates/index.html');
 let htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
@@ -53,34 +53,6 @@ module.exports = {
         
         await browser.close();
         console.log("--- Browser closed ---\n");
-    },
-
-
-    getAllResults : async (students, exam_id) => {
-        let browser = await chromium.launch();
-        let page = await browser.newPage();
-
-        await page.setViewportSize({ width: 1000, height: 850 });
-        await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
-        // await page.goto("https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/");
-        await page.selectOption('select#exam_id', exam_id);
-
-        console.log("\nStarting to take screenshots...\n");
-
-        for (let i = 0; i < students.length; i++) {
-            
-            await page.fill('#prn', students[i].prn);
-            await page.click('button#btnresult');
-
-            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
-            await page.screenshot({
-                path: `public/screenshots/${students[i].prn}.png`,
-            });
-            console.log(`Screenshot taken for ${students[i].name}`);
-        }
-
-        await browser.close();
-        console.log("\nAll screenshots taken!\n");
     },
 
 

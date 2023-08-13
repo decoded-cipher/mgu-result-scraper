@@ -1,23 +1,62 @@
 const { chromium } = require("playwright");
 const fs = require('fs');
 const path = require('path');
-const { pattern } = require("pdfkit");
+const { saveData, generateQid, checkQid } = require('./database.js');
+
+
 
 module.exports = {
 
-    fetchResults : async () => {
+    fetchAllResults : async (students, exam_id) => {
+        for (let i = 0; i < students.length; i++) {
+            console.log(`--- Fetching result for ${students[i].prn}`);
+            await module.exports.fetchResult(students[i].prn, exam_id);
+        }
+        console.log("\n--- All results fetched ---\n");
+    },
+
+
+
+
+
+    processAllResults : async (students, exam_id) => {
+        for (let i = 0; i < students.length; i++) {
+            console.log(`--- Processing result for ${students[i].prn}`);
+            await module.exports.processResult(students[i].prn, exam_id);
+        }
+        console.log("\n--- All results processed ---\n");
+    },
+
+
+
+
+
+    fetchResult : async (student_id, exam_id) => {
+
+        let qid = generateQid(student_id, exam_id);
+        let result = await checkQid(qid);
+
+        if (result) {
+            console.log("Data already present in database...");
+            return;
+        }
+
         let browser = await chromium.launch();
         let page = await browser.newPage();
-
         await page.setViewportSize({ width: 1000, height: 850 });
+        
         await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
-        await page.selectOption('select#exam_id', "126");
-
-        await page.fill('#prn', "203242211001");
+        // await page.goto("https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/");
+        
+        await page.selectOption('select#exam_id', exam_id);
+        await page.fill('#prn', student_id);
         await page.click('button#btnresult');
 
         await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
-        
+
+        // wait for 2 seconds
+        await page.waitForTimeout(1000);
+
         // get the result table
         const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
         const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
@@ -25,32 +64,34 @@ module.exports = {
         // get the result table html
         const resultTableHTML = await resultTable.innerHTML();
         const studentDetailsHTML = await studentDetails.innerHTML();
-
-
+        
         // create folder if it doesn't exist with the name as exam_id inside public/analytics
-        if (fs.existsSync(path.join(__dirname, `public/analytics/203242211001`))) {
-            fs.rmdirSync(path.join(__dirname, `public/analytics/203242211001`), { recursive: true });
+        if (fs.existsSync(path.join(__dirname, `../public/analytics/${student_id}`), { recursive: true })) {
+            fs.rm(path.join(__dirname, `../public/analytics/${student_id}`), { recursive: true });
         }
-
-        fs.mkdirSync(path.join(__dirname, `public/analytics/203242211001`));
-
-
+        
+        fs.mkdirSync(path.join(__dirname, `../public/analytics/${student_id}`), { recursive: true });
+        
         // write the result table html to a file
-        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/result.html`), resultTableHTML);
-        fs.writeFileSync(path.join(__dirname, `public/analytics/203242211001/details.html`), studentDetailsHTML);
+        fs.writeFileSync(path.join(__dirname, `../public/analytics/${student_id}/result.html`), resultTableHTML);
+        fs.writeFileSync(path.join(__dirname, `../public/analytics/${student_id}/details.html`), studentDetailsHTML);
+        
 
+        // take a screenshot of the result page
+        await page.screenshot({
+            path: `public/screenshots/${student_id}.png`,
+        });
+
+        // close the browser instance ASAP
         await browser.close();
+
     },
 
 
 
 
 
-
-
-
-
-    processResults : async () => {
+    processResult : async (student_id, exam_id) => {
 
         let allSubjects = [];
         let semester = {};
@@ -58,7 +99,7 @@ module.exports = {
 
 
         // get table html from the file
-        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/result.html'), 'utf8');
+        let html = fs.readFileSync(path.join(__dirname, `../public/analytics/${student_id}/result.html`), 'utf8');
         
         // remove comments and blank lines from the html
         let htmlWithoutComments = html.replace(/<!--[\s\S]*?-->/g, '');
@@ -189,7 +230,7 @@ module.exports = {
         }
 
         // call processExamDetails() to get the general student/exam details
-        let studentDetails = await module.exports.processExamDetails();
+        let studentDetails = await module.exports.processExamDetails(student_id, exam_id);
 
         semester = {
             ...studentDetails,
@@ -198,10 +239,13 @@ module.exports = {
                 subjects : allSubjects
             },
         }
-        console.log(semester);
+        // console.log(semester);
 
         // save the semester object to a json file
-        fs.writeFileSync(path.join(__dirname, 'public/analytics/203242211001/semester.json'), JSON.stringify(semester));
+        fs.writeFileSync(path.join(__dirname, `../public/analytics/${student_id}/semester.json`), JSON.stringify(semester));
+
+        // save the semester object to the database
+        await saveData(semester, student_id, exam_id);
 
     },
 
@@ -209,15 +253,12 @@ module.exports = {
 
 
 
-
-
-
-    processExamDetails : async () => {
+    processExamDetails : async (student_id) => {
 
         let details = [];
 
         // get table html from the file
-        let html = fs.readFileSync(path.join(__dirname, 'public/analytics/203242211001/details.html'), 'utf8');
+        let html = fs.readFileSync(path.join(__dirname, `../public/analytics/${student_id}/details.html`), 'utf8');
 
 
         // get the html between the inner <tbody> and </tbody>

@@ -1,21 +1,22 @@
 require('dotenv').config()
 
 const data = require('./public/data.json');
-const api = require('./api.js');
-const analytics = require('./analytics.js');
+const utils = require('./helpers/utils.js');
+const analytics = require('./helpers/analytics.js');
+const db = require('./config/db');
+
 
 (async () => {
-    // await api.fetchExamDetails();
+    await db.connect();
+    // await utils.fetchExamDetails();
 
-    // await api.getAllResults(data.students, data.exam_id);
+    await analytics.fetchAllResults(data.students, data.exam_id);
     // console.log("--- -------------------- ---");
-    // await api.generatePDFs(data.students);
+
+    // await utils.generatePDFs(data.students);
     // console.log("--- -------------------- ---");
-    // await api.sendOutEmails(data.students);
+    // await utils.sendOutEmails(data.students);
 
-
-    // await analytics.fetchResults();
+    await analytics.processAllResults(data.students, data.exam_id);
     // console.log("--- -------------------- ---");
-    await analytics.processResults();
-
 })();
