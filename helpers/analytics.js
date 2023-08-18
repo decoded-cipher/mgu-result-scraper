@@ -33,13 +33,13 @@ module.exports = {
 
     fetchResult : async (student_id, exam_id) => {
 
-        let qid = generateQid(student_id, exam_id);
-        let result = await checkQid(qid);
+        // let qid = generateQid(student_id, exam_id);
+        // let result = await checkQid(qid);
 
-        if (result) {
-            console.log("Data already present in database...");
-            return;
-        }
+        // if (result) {
+        //     console.log("Data already present in database...");
+        //     return;
+        // }
 
         let browser = await chromium.launch();
         let page = await browser.newPage();

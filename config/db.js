@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 module.exports = {
-    connect: async () => {
+    connect: () => {
         mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
         .then(() => {
             console.log("--- Mongoose Connected\n");
@@ -10,7 +10,7 @@ module.exports = {
         });
     },
 
-    collection: async (name) => {
+    collection: (name) => {
         return mongoose.connection.db.collection(name);
     }
 };

@@ -15,31 +15,61 @@ module.exports = {
     },
 
 
-
     saveData : async (data, student_id, exam_id) => {
-        
-        let qid = module.exports.generateQid(student_id, exam_id);
-        data = {
-            ...data,
-            qid: qid,
-        }
+        return new Promise((resolve, reject) => {
 
-        let result = await module.exports.checkQid(qid);
-        if (result) {
-            console.log("Data already present in database...");
-            return;
-        }
-        
-        await db.collection('results').insertOne(data, async (err, res) => {
-            if (err) throw err;
-            console.log("Data inserted successfully...");
+            let qid = module.exports.generateQid(student_id, exam_id);
+            let collectionName = "exam_" + exam_id;
+
+            console.log("Saving data for: " + qid + " in collection: " + collectionName);
+
+            db.collection(collectionName).findOne({ qid: qid }, async (err, result) => {
+                if (err) {
+                    console.log("Error in finding data: " + err);
+                    reject(err);
+                } else {
+                    if (result) {
+                        console.log("Data found: " + result);
+                        resolve(result);
+                    } else {
+                        console.log("Data not found. Inserting data...");
+                        
+                        db.collection(collectionName).insertOne({ 
+                            qid: qid,
+                            created_at: new Date(), 
+                            data: data
+                         }, (err, result) => {
+                            if (err) {
+                                console.log("Error in inserting data: " + err);
+                                reject(err);
+                            } else {
+                                console.log("Data inserted successfully: " + result);
+                                resolve(result);
+                            }
+                        });
+                    }
+                }
+            });
+            
         });
 
     },
 
-    checkQid : async (qid) => {
-        let result = await db.collection('results').findOne({ qid: qid });
-        return result;
+
+    checkQid : async (id) => {
+        return new Promise((resolve, reject) => {
+
+            db.collection('results').findOne({ qid: id }, async (err, result) => {
+                if (err) {
+                    console.log("Error in finding data: " + err);
+                    reject(err);
+                } else {
+                    console.log("Data found: " + result);
+                    resolve(result);
+                }
+            });
+
+        });
     },
 
 }
