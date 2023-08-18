@@ -2,9 +2,10 @@ require('dotenv').config()
 const express = require('express')
 
 const db = require('./config/db');
-const data = require('./public/data.json');
 const utils = require('./helpers/utils.js');
-const analytics = require('./helpers/analytics.js');
+
+const data = require('./public/data/data.json');
+const analytics = require('./helpers/cbcs_analytics.js');
 
 
 const app = express()
