@@ -6,8 +6,8 @@ const utils = require('./helpers/utils.js');
 
 const data = require('./public/data/mca_2020.json');
 
-const ug_analytics = require('./helpers/ug_analytics.js');
-const pg_analytics = require('./helpers/pg_analytics.js');
+const process_ug = require('./helpers/process_UG.js');
+const process_pg = require('./helpers/process_PG.js');
 
 const app = express()
 
@@ -15,10 +15,10 @@ db.connect();
 
 app.get('/', async (req, res) => {
 
-    let analytics = null;
+    let processMode = null;
     let mode = req.query.mode;
 
-    mode == "ug" ? analytics = ug_analytics : analytics = pg_analytics;
+    mode == "ug" ? processMode = process_ug : processMode = process_pg;
 
     if(!mode) {
         res.send({
@@ -36,7 +36,7 @@ app.get('/', async (req, res) => {
 
         // await utils.fetchExamDetails();
     
-        // await analytics.fetchAllResults(data.students, data.exam_id);
+        // await processMode.fetchAllResults(data.students, data.exam_id);
         // console.log("--- -------------------- ---");
     
         // await utils.generatePDFs(data.students);
@@ -45,12 +45,12 @@ app.get('/', async (req, res) => {
         // await utils.sendOutEmails(data.students);
         // console.log("--- -------------------- ---");
     
-        await analytics.processAllResults(data.students, data.exam_id);
+        await processMode.processAllResults(data.students, data.exam_id);
         // console.log("--- -------------------- ---");
 
+        res.send(data);
+        
     }
-
-    res.send(data);
 
 })
 

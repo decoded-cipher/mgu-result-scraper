@@ -5,6 +5,7 @@ const db = require('../config/db');
 
 module.exports = {
 
+    // Generate unique id for each record
     generateQid: (student_id, exam_id) => {
         let hash = crypto.createHash('md5');
         hash.update(String(student_id) + String(exam_id));
@@ -48,17 +49,17 @@ module.exports = {
 
             // Insert data into database
             db.collection(collectionName).insertOne({ 
-                qid: qid,
-                created_at: new Date(), 
-                data: data
+                    qid: qid,
+                    created_at: new Date(), 
+                    data: data
                 }, (err, result) => {
-                if (err) {
-                    console.log("--- [saveData] --- Error in inserting data: " + err + "\n");
-                    reject(err);
-                } else {
-                    console.log("--- [saveData] --- Data inserted successfully: " + result + "\n");
-                    resolve(result);
-                }
+                    if (err) {
+                        console.log("--- [saveData] --- Error in inserting data: " + err + "\n");
+                        reject(err);
+                    } else {
+                        console.log("--- [saveData] --- Data inserted successfully: " + result + "\n");
+                        resolve(result);
+                    }
             });
             
         });
