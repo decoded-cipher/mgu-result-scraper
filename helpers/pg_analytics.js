@@ -9,8 +9,16 @@ module.exports = {
 
     fetchAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
-            console.log(`--- Fetching result for ${students[i].prn}`);
-            await module.exports.fetchResult(students[i].prn, exam_id);
+
+            let result = await checkQid(students[i].prn, exam_id);
+
+            if (result) {
+                console.log("--- Data already present in database. Skipping data fetch...");
+            } else {
+                console.log(`--- Fetching result for ${students[i].prn}`);
+                await module.exports.fetchResult(students[i].prn, exam_id);
+            }
+
         }
         console.log("\n--- All results fetched ---\n");
     },
@@ -21,8 +29,16 @@ module.exports = {
 
     processAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
-            console.log(`--- Processing result for ${students[i].prn}`);
-            await module.exports.processResult(students[i].prn, exam_id);
+
+            let result = await checkQid(students[i].prn, exam_id);
+
+            if (result) {
+                console.log("--- Data already present in database. Skipping data processing...");
+            } else {
+                console.log(`--- Processing result for ${students[i].prn}`);
+                await module.exports.processResult(students[i].prn, exam_id);
+            }
+
         }
         console.log("\n--- All results processed ---\n");
     },
@@ -33,20 +49,12 @@ module.exports = {
 
     fetchResult : async (student_id, exam_id) => {
 
-        // let qid = generateQid(student_id, exam_id);
-        // let result = await checkQid(qid);
-
-        // if (result) {
-        //     console.log("Data already present in database...");
-        //     return;
-        // }
-
         let browser = await chromium.launch();
         let page = await browser.newPage();
         await page.setViewportSize({ width: 1000, height: 850 });
         
+        // go to the result page
         await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
-        // await page.goto("https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/");
         
         await page.selectOption('select#exam_id', exam_id);
         await page.fill('#prn', student_id);
@@ -54,8 +62,8 @@ module.exports = {
 
         await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
 
-        // wait for 2 seconds
-        await page.waitForTimeout(1000);
+        // // wait for 2 seconds
+        // await page.waitForTimeout(1000);
 
         // get the result table
         const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
@@ -153,12 +161,14 @@ module.exports = {
                 // break;
                 
                 column[7] = column[7].replace(/<span style="color:#390;">/g, ''),
+                column[7] = column[7].replace(/<span style="color:#F00;">/g, ''),
                 column[7] = column[7].replace(/<\/span>/g, '')
             }
 
 
             // remove <span style="color:green;" from the beginning and </span from the end, if its not the last row
             !flag ? column[11] = column[11].replace(/<span style="color:green;">/g, '') : null;
+            !flag ? column[11] = column[11].replace(/<span style="color:#F00;">/g, '') : null;
             !flag ? column[11] = column[11].replace(/<\/span>/g, '') : null;
 
 

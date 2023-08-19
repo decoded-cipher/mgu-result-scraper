@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const fs = require('fs');
 const path = require('path');
-const { saveData, generateQid, checkQid } = require('./database.js');
+const { saveData, checkQid } = require('./database.js');
 
 
 
@@ -9,8 +9,16 @@ module.exports = {
 
     fetchAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
-            console.log(`--- Fetching result for ${students[i].prn}`);
-            await module.exports.fetchResult(students[i].prn, exam_id);
+
+            let result = await checkQid(students[i].prn, exam_id);
+
+            if (result) {
+                console.log("--- Data already present in database. Skipping data fetch...");
+            } else {
+                console.log(`--- Fetching result for ${students[i].prn}`);
+                await module.exports.fetchResult(students[i].prn, exam_id);
+            }
+
         }
         console.log("\n--- All results fetched ---\n");
     },
@@ -21,8 +29,16 @@ module.exports = {
 
     processAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
-            console.log(`--- Processing result for ${students[i].prn}`);
-            await module.exports.processResult(students[i].prn, exam_id);
+
+            let result = await checkQid(students[i].prn, exam_id);
+
+            if (result) {
+                console.log("--- Data already present in database. Skipping data processing...");
+            } else {
+                console.log(`--- Processing result for ${students[i].prn}`);
+                await module.exports.processResult(students[i].prn, exam_id);
+            }
+
         }
         console.log("\n--- All results processed ---\n");
     },
@@ -37,6 +53,7 @@ module.exports = {
         let page = await browser.newPage();
         await page.setViewportSize({ width: 1000, height: 850 });
         
+        // go to the result page
         await page.goto("https://dsdc.mgu.ac.in/exQpMgmt/index.php/public/ResultView_ctrl/");
         
         await page.selectOption('select#exam_id', exam_id);
@@ -145,12 +162,14 @@ module.exports = {
                 // break;
                 
                 column[8] = column[8].replace(/<span style="color:#390;">/g, ''),
+                column[8] = column[8].replace(/<span style="color:#F00;">/g, ''),
                 column[8] = column[8].replace(/<\/span>/g, '')
             }
 
 
             // remove <span style="color:green;" from the beginning and </span from the end, if its not the last row
             !flag ? column[12] = column[12].replace(/<span style="color:green;">/g, '') : null;
+            !flag ? column[12] = column[12].replace(/<span style="color:#F00;">/g, '') : null;
             !flag ? column[12] = column[12].replace(/<\/span>/g, '') : null;
 
 
@@ -233,13 +252,13 @@ module.exports = {
                 subjects : allSubjects
             },
         }
-        console.log(semester);
+        // console.log(semester);
 
         // save the semester object to a json file
         fs.writeFileSync(path.join(__dirname, `../public/analytics/${student_id}/semester.json`), JSON.stringify(semester));
 
         // save the semester object to the database
-        // await saveData(semester, student_id, exam_id);
+        await saveData(semester, student_id, exam_id);
 
     },
 

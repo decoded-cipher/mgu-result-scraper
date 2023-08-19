@@ -29,7 +29,7 @@ module.exports = {
                     reject(err);
                 } else {
                     if (result) {
-                        console.log("Data found: " + result);
+                        console.log("Data found. Skipping data insertion...\n");
                         resolve(result);
                     } else {
                         console.log("Data not found. Inserting data...");
@@ -40,10 +40,10 @@ module.exports = {
                             data: data
                          }, (err, result) => {
                             if (err) {
-                                console.log("Error in inserting data: " + err);
+                                console.log("Error in inserting data: " + err + "\n");
                                 reject(err);
                             } else {
-                                console.log("Data inserted successfully: " + result);
+                                console.log("Data inserted successfully: " + result + "\n");
                                 resolve(result);
                             }
                         });
@@ -56,10 +56,13 @@ module.exports = {
     },
 
 
-    checkQid : async (id) => {
+    checkQid : async (student_id, exam_id) => {
         return new Promise((resolve, reject) => {
 
-            db.collection('results').findOne({ qid: id }, async (err, result) => {
+            let qid = module.exports.generateQid(student_id, exam_id);
+            let collectionName = "exam_" + exam_id;
+
+            db.collection(collectionName).findOne({ qid: qid }, async (err, result) => {
                 if (err) {
                     console.log("Error in finding data: " + err);
                     reject(err);
@@ -71,5 +74,35 @@ module.exports = {
 
         });
     },
+
+
+
+
+
+
+
+
+
+
+
+
+
+    updateFailedResults : async () => {
+        return new Promise((resolve, reject) => {
+
+            db.collection('exam_90').find({ "data.result.result": "Failed" }).toArray((err, result) => {
+                if (err) {
+                    console.log("Error in finding data: " + err);
+                    reject(err);
+                } else {
+                    console.log("Data found: " + result);
+                    resolve(result);
+                }
+            });
+
+            
+
+        });
+    }
 
 }
