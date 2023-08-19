@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const fs = require('fs');
 const path = require('path');
-const { saveData, checkQid } = require('./database.js');
+const { saveData, checkQid, generateQid } = require('./database.js');
 
 
 
@@ -10,17 +10,18 @@ module.exports = {
     fetchAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
 
-            let result = await checkQid(students[i].prn, exam_id);
+            let qid = generateQid(students[i].prn, exam_id);
+            let result = await checkQid(exam_id, qid);
 
             if (result) {
-                console.log("--- Data already present in database. Skipping data fetch...");
+                console.log("--- [fetchAllResults] Data already present in database. Skipping data fetch... \\n");
             } else {
-                console.log(`--- Fetching result for ${students[i].prn}`);
+                console.log(`--- [fetchAllResults] Fetching result for ${students[i].prn} \n`);
                 await module.exports.fetchResult(students[i].prn, exam_id);
             }
 
         }
-        console.log("\n--- All results fetched ---\n");
+        console.log("\n--- [fetchAllResults] All results fetched \n");
     },
 
 
@@ -30,17 +31,18 @@ module.exports = {
     processAllResults : async (students, exam_id) => {
         for (let i = 0; i < students.length; i++) {
 
-            let result = await checkQid(students[i].prn, exam_id);
+            let qid = generateQid(students[i].prn, exam_id);
+            let result = await checkQid(exam_id, qid);
 
             if (result) {
-                console.log("--- Data already present in database. Skipping data processing...");
+                console.log("--- [processAllResults] --- Data already present in database. Skip data processing...\n");
             } else {
-                console.log(`--- Processing result for ${students[i].prn}`);
-                await module.exports.processResult(students[i].prn, exam_id);
+                console.log(`--- [processAllResults] --- Processing result for ${students[i].prn}`);
+                await module.exports.processResult(students[i].prn, exam_id, qid);
             }
 
         }
-        console.log("\n--- All results processed ---\n");
+        console.log("\n--- [processAllResults] --- All results processed \n");
     },
 
 
@@ -100,7 +102,7 @@ module.exports = {
 
 
 
-    processResult : async (student_id, exam_id) => {
+    processResult : async (student_id, exam_id, qid) => {
 
         let allSubjects = [];
         let semester = {};
@@ -258,7 +260,7 @@ module.exports = {
         fs.writeFileSync(path.join(__dirname, `../public/analytics/${student_id}/semester.json`), JSON.stringify(semester));
 
         // save the semester object to the database
-        await saveData(semester, student_id, exam_id);
+        await saveData(semester, exam_id, qid);
 
     },
 

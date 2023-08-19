@@ -4,7 +4,7 @@ const express = require('express')
 const db = require('./config/db');
 const utils = require('./helpers/utils.js');
 
-const data = require('./public/data/temp.json');
+const data = require('./public/data/mca_2020.json');
 
 const ug_analytics = require('./helpers/ug_analytics.js');
 const pg_analytics = require('./helpers/pg_analytics.js');
@@ -36,7 +36,7 @@ app.get('/', async (req, res) => {
 
         // await utils.fetchExamDetails();
     
-        await analytics.fetchAllResults(data.students, data.exam_id);
+        // await analytics.fetchAllResults(data.students, data.exam_id);
         // console.log("--- -------------------- ---");
     
         // await utils.generatePDFs(data.students);
@@ -45,7 +45,7 @@ app.get('/', async (req, res) => {
         // await utils.sendOutEmails(data.students);
         // console.log("--- -------------------- ---");
     
-        // await analytics.processAllResults(data.students, data.exam_id);
+        await analytics.processAllResults(data.students, data.exam_id);
         // console.log("--- -------------------- ---");
 
     }
