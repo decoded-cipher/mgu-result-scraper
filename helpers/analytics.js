@@ -9,19 +9,37 @@ const data = require('../public/xlsx/data.json');
 module.exports = {
 
 
+    // Generate XLSX file
     generate_XLSX : async () => {
         return new Promise(async (resolve, reject) => {
 
             // await getDataByDept().then(async (data) => {
 
-                let failedArray = {
-                    index : [],
+                let resultStats = {
+                    overall : {
+                        pass : 0,
+                        fail : 0,
+                        index : [],
+                        names : [],
+                        grades: {
+                            "S" : 0,
+                            "A+" : 0,
+                            "A" : 0,
+                            "B+" : 0,
+                            "B" : 0,
+                            "C" : 0,
+                            "D" : 0,
+                            "F" : 0,
+                        }
+                    },
+                    subjects : [],
+
                 }
 
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Results');
 
-                
+
                 
                 // Add metadata to the XLSX file
                 workbook.creator = 'Inovus Labs';
@@ -52,7 +70,7 @@ module.exports = {
 
                 
                 // Populate the XLSX file with data, column wise
-                await module.exports.getDataAsArray(data, failedArray).then((response) => {
+                await module.exports.getDataAsArray(data, resultStats).then((response) => {
 
                     worksheet.getColumn('A').values = [null, null, null, null, "Register Number", ...response.results.prn];
                     worksheet.getColumn('B').values = [null, null, null, null, "Name", ...response.results.names];
@@ -127,8 +145,8 @@ module.exports = {
                         row.height = 25;
                     }
 
-                    // if rowNumber exists in failedArray, then highlight the row
-                    if(failedArray.index.includes(rowNumber - 6)) {
+                    // if rowNumber exists in resultStats, then highlight the row
+                    if(resultStats.overall.index.includes(rowNumber - 6)) {
                         row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
                             cell.fill = {
                                 type: 'pattern',
@@ -149,6 +167,7 @@ module.exports = {
                     resolve({
                         status: "success",
                         message: "XLSX file generated",
+                        resultStats: resultStats,
                     });
                 });
 
@@ -168,7 +187,7 @@ module.exports = {
 
     
     // Convert data to array, so that it can be used in XLSX
-    getDataAsArray : async (data, failedArray) => {
+    getDataAsArray : async (data, resultStats) => {
         return new Promise(async (resolve, reject) => {
 
             // Get the subject list
@@ -200,8 +219,40 @@ module.exports = {
                 let gradeHolder = data[i].data.result.grade;
                 let sgpaHolder = data[i].data.result.scpa;
 
+                // Count the overall grades
+                switch(gradeHolder) {
+                    case "S":
+                        resultStats.overall.grades["S"]++;
+                        break;
+                    case "A+":
+                        resultStats.overall.grades["A+"]++;
+                        break;
+                    case "A":
+                        resultStats.overall.grades["A"]++;
+                        break;
+                    case "B+":
+                        resultStats.overall.grades["B+"]++;
+                        break;
+                    case "B":
+                        resultStats.overall.grades["B"]++;
+                        break;
+                    case "C":
+                        resultStats.overall.grades["C"]++;
+                        break;
+                    case "D":
+                        resultStats.overall.grades["D"]++;
+                        break;
+                    default:
+                        resultStats.overall.grades["F"]++;
+                }
+                
+                // Count the overall pass and fail
                 if(markHolder === null) {
-                    failedArray.index.push(i);
+                    resultStats.overall.index.push(i);
+                    resultStats.overall.names.push(data[i].data.name);
+                    resultStats.overall.fail++;
+                } else {
+                    resultStats.overall.pass++;
                 }
 
                 // Handling null values in the data with "-" and "F"
@@ -225,11 +276,64 @@ module.exports = {
                     grade : [],
                 };
 
+                resultStats.subjects[i] = {
+                    pass : 0,
+                    fail : 0,
+                    index : [],
+                    names : [],
+                    grades: {
+                        "S" : 0,
+                        "A+" : 0,
+                        "A" : 0,
+                        "B+" : 0,
+                        "B" : 0,
+                        "C" : 0,
+                        "D" : 0,
+                        "F" : 0,
+                    }
+                };
+                
                 for(let j = 0; j < data.length; j++) {
 
                     let markHolder = data[j].data.result.subjects[i].total;
                     let gradeHolder = data[j].data.result.subjects[i].grade;
 
+                    // Count the subject wise grades
+                    switch(gradeHolder) {
+                        case "S":
+                            resultStats.subjects[i].grades["S"]++;
+                            break;
+                        case "A+":
+                            resultStats.subjects[i].grades["A+"]++;
+                            break;
+                        case "A":
+                            resultStats.subjects[i].grades["A"]++;
+                            break;
+                        case "B+":
+                            resultStats.subjects[i].grades["B+"]++;
+                            break;
+                        case "B":
+                            resultStats.subjects[i].grades["B"]++;
+                            break;
+                        case "C":
+                            resultStats.subjects[i].grades["C"]++;
+                            break;
+                        case "D":
+                            resultStats.subjects[i].grades["D"]++;
+                            break;
+                        default:
+                            resultStats.subjects[i].grades["F"]++;
+                    }
+
+                    // Count the subject wise pass and fail
+                    if(markHolder === null) {
+                        resultStats.subjects[i].index.push(j);
+                        resultStats.subjects[i].names.push(data[j].data.name);
+                        resultStats.subjects[i].fail++;
+                    } else {
+                        resultStats.subjects[i].pass++;
+                    }
+                    
                     // Handling null values in the data with "-" and "F"
                     markHolder === null ? markHolder = "-" : markHolder = markHolder;
                     gradeHolder === null ? gradeHolder = "F" : gradeHolder = gradeHolder;
@@ -250,6 +354,7 @@ module.exports = {
 
         });
     },
+
 
 };
 
