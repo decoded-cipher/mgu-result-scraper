@@ -17,10 +17,14 @@ module.exports = {
 
                 let resultStats = {
                     overall : {
-                        pass : 0,
-                        fail : 0,
-                        index : [],
-                        names : [],
+                        pass : {
+                            count : 0,
+                        },
+                        fail : {
+                            count : 0,
+                            index : [],
+                            names : [],
+                        },
                         grades: {
                             "S" : 0,
                             "A+" : 0,
@@ -146,7 +150,7 @@ module.exports = {
                     }
 
                     // if rowNumber exists in resultStats, then highlight the row
-                    if(resultStats.overall.index.includes(rowNumber - 6)) {
+                    if(resultStats.overall.fail.index.includes(rowNumber - 6)) {
                         row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
                             cell.fill = {
                                 type: 'pattern',
@@ -248,11 +252,11 @@ module.exports = {
                 
                 // Count the overall pass and fail
                 if(markHolder === null) {
-                    resultStats.overall.index.push(i);
-                    resultStats.overall.names.push(data[i].data.name);
-                    resultStats.overall.fail++;
+                    resultStats.overall.fail.index.push(i);
+                    resultStats.overall.fail.names.push(data[i].data.name);
+                    resultStats.overall.fail.count++;
                 } else {
-                    resultStats.overall.pass++;
+                    resultStats.overall.pass.count++;
                 }
 
                 // Handling null values in the data with "-" and "F"
@@ -277,10 +281,15 @@ module.exports = {
                 };
 
                 resultStats.subjects[i] = {
-                    pass : 0,
-                    fail : 0,
-                    index : [],
-                    names : [],
+                    name : null,
+                    pass : {
+                        count : 0,
+                    },
+                    fail : {
+                        count : 0,
+                        index : [],
+                        names : [],
+                    },
                     grades: {
                         "S" : 0,
                         "A+" : 0,
@@ -325,13 +334,15 @@ module.exports = {
                             resultStats.subjects[i].grades["F"]++;
                     }
 
+                    resultStats.subjects[i].name = data[j].data.result.subjects[i].course;
+
                     // Count the subject wise pass and fail
                     if(markHolder === null) {
-                        resultStats.subjects[i].index.push(j);
-                        resultStats.subjects[i].names.push(data[j].data.name);
-                        resultStats.subjects[i].fail++;
+                        resultStats.subjects[i].fail.index.push(j);
+                        resultStats.subjects[i].fail.names.push(data[j].data.name);
+                        resultStats.subjects[i].fail.count++;
                     } else {
-                        resultStats.subjects[i].pass++;
+                        resultStats.subjects[i].pass.count++;
                     }
                     
                     // Handling null values in the data with "-" and "F"
