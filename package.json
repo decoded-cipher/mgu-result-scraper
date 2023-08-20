@@ -21,7 +21,6 @@
     "mongoose": "^6.1.7",
     "nodemailer": "^6.9.1",
     "pdfkit": "^0.13.0",
-    "playwright": "^1.22.2",
-    "xlsx-template": "^1.4.3"
+    "playwright": "^1.22.2"
   }
 }

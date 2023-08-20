@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+
 const ExcelJS = require('exceljs');
+
+
 const { getDataByDept } = require('./database');
-
 const data = require('../public/xlsx/data.json');
-
 
 module.exports = {
 
@@ -362,6 +363,18 @@ module.exports = {
                 results : results,
                 subjectList : subjectList,
             });
+
+        });
+    },
+
+
+
+
+    // Generate PDF files from XLSX file
+    generate_PDF : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            
 
         });
     },
