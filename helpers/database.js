@@ -64,6 +64,31 @@ module.exports = {
             
         });
 
+    },
+
+
+    // Fetch data from database
+    getDataByDept : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getDataByDept] --- Fetching data for : " + programme);
+
+            // Fetch data from database
+            db.collection(collectionName).find({ "data.programme": programme }).toArray((err, result) => {
+                if (err) {
+                    console.log("--- [getDataByDept] --- Error in fetching data: \n");
+                    reject(err);
+                } else {
+                    console.log("--- [getDataByDept] --- Data fetched successfully: \n");
+                    resolve(result);
+                }
+            });
+
+        });
+
     }
 
 

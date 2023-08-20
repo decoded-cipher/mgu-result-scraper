@@ -4,5 +4,5 @@ node_modules
 public/screenshots
 public/secure_pdfs
 public/analytics
-public/exam_details.json
 public/data
+public/xlsx

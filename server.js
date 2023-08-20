@@ -2,16 +2,16 @@ require('dotenv').config()
 const express = require('express')
 
 const db = require('./config/db');
-const utils = require('./helpers/utils.js');
-
 const data = require('./public/data/mca_2020.json');
 
+const utils = require('./helpers/utils.js');
 const process_ug = require('./helpers/process_UG.js');
 const process_pg = require('./helpers/process_PG.js');
+const analytics = require('./helpers/analytics.js');
 
 const app = express()
 
-db.connect();
+// db.connect();
 
 app.get('/', async (req, res) => {
 
@@ -53,6 +53,19 @@ app.get('/', async (req, res) => {
     }
 
 })
+
+
+
+
+app.get('/analytics', async (req, res) => {
+
+    let result = await analytics.generate_XLSX();
+    res.send(result);
+    
+});
+
+
+
 
 app.listen(process.env.PORT, () => {
     console.log(`Server listening on port ${process.env.PORT}`)
