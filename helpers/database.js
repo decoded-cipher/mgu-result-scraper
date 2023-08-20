@@ -76,7 +76,7 @@ module.exports = {
 
             console.log("--- [getDataByDept] --- Fetching data for : " + programme);
 
-
+            // Fetch data from database
             db.collection(collectionName).find({ "data.programme": programme }).sort({ "data.prn": 1 }).toArray((err, result) => {
                 if (err) {
                     console.log("--- [getDataByDept] --- Error in fetching data: \n");

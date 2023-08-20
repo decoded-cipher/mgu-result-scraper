@@ -21,6 +21,25 @@ module.exports = {
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Results');
 
+                
+                
+                // Add metadata to the XLSX file
+                workbook.creator = 'Inovus Labs';
+                workbook.lastModifiedBy = 'Arjun Krishna';
+
+                workbook.title = 'Consolidated Marklist';
+                workbook.subject = 'MGU Result Scrapper';
+                workbook.category = 'MGU Result Scrapper';
+                workbook.description = 'Consolidated marklist of all students';
+                workbook.keywords = 'MGU, Result, Scrapper, Consolidated, Marklist';
+                workbook.company = 'Inovus Labs';
+
+                workbook.created = new Date();
+                workbook.modified = new Date();
+                workbook.lastPrinted = new Date();
+
+
+
                 worksheet.properties.defaultRowHeight = 25;
                 worksheet.properties.defaultColWidth = 9;
 
@@ -125,7 +144,7 @@ module.exports = {
 
 
                 // Write data to XLSX file
-                await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/IEDC_Analytics.xlsx')).then(() => {
+                await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Consolidated Marklist.xlsx')).then(() => {
                     console.log("XLSX file generated");
                     resolve({
                         status: "success",
