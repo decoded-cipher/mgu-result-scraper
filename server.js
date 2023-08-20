@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+// const { spawn } = require('child_process');
 
 const db = require('./config/db');
 const data = require('./public/data/mca_2020.json');
@@ -62,6 +63,42 @@ app.get('/analytics', async (req, res) => {
     let result = await analytics.generate_XLSX();
     res.send(result);
     
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get('/test', async (req, res) => {
+
+    var dataToSend;
+
+    // spawn new child process to call the python script
+    const python = spawn('python', ['./helpers/subroutine.py']);
+
+    // collect data from script
+    python.stdout.on('data', (data) => {
+        console.log('Pipe data from python script ...');
+        dataToSend = data.toString();
+    });
+
+    // in close event we are sure that stream from child process is closed
+    python.on('close', (code) => {
+        console.log(`child process close all stdio with code ${code}`);
+        // send data to browser
+        res.send(dataToSend)
+    });
+
 });
 
 
