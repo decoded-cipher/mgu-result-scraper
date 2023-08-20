@@ -5,6 +5,7 @@ const { getDataByDept } = require('./database');
 
 const data = require('../public/xlsx/data.json');
 
+
 module.exports = {
 
 
@@ -12,6 +13,10 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
 
             // await getDataByDept().then(async (data) => {
+
+                let failedArray = {
+                    index : [],
+                }
 
                 const workbook = new ExcelJS.Workbook();
                 const worksheet = workbook.addWorksheet('Results');
@@ -26,19 +31,21 @@ module.exports = {
                 worksheet.mergeCells('B4:B5');
 
 
-
-
-
-                await module.exports.getDataAsArray().then((response) => {
+                
+                // Populate the XLSX file with data, column wise
+                await module.exports.getDataAsArray(data, failedArray).then((response) => {
 
                     worksheet.getColumn('A').values = [null, null, null, null, "Register Number", ...response.results.prn];
                     worksheet.getColumn('B').values = [null, null, null, null, "Name", ...response.results.names];
 
+                    // Subject wise marks and grades
                     for(let i = 0; i <= response.results.subjects.length; i++) {
 
                         let cell_11 = String.fromCharCode(67 + (i * 2)) + "4";
                         let cell_12 = String.fromCharCode(68 + (i * 2)) + "4";
 
+                        // If the loop is at the last iteration (<=), then its the overall section
+                        // Else, add the subject wise marks and grades
                         if(i == response.results.subjects.length) {
 
                             cell_12 = String.fromCharCode(70 + (i * 2)) + "4";
@@ -50,7 +57,6 @@ module.exports = {
                             worksheet.getColumn(String.fromCharCode(70 + (i * 2))).values = [null, null, null, "Overall", "SGPA", ...response.results.overall.sgpa];
                         
                         } else {
-
                             worksheet.mergeCells(cell_11 + ":" + cell_12);
                             worksheet.getColumn(String.fromCharCode(67 + (i * 2))).values = [null, null, null, null, "Marks", ...response.results.subjects[i].marks];
                             worksheet.getColumn(String.fromCharCode(68 + (i * 2))).values = [null, null, null, response.subjectList[i], "Grade", ...response.results.subjects[i].grade];
@@ -63,10 +69,7 @@ module.exports = {
 
 
 
-
-
-
-
+                // Styling the XLSX file (fonts, borders, alignment, etc.)
                 worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
                     row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
 
@@ -105,11 +108,23 @@ module.exports = {
                         row.height = 25;
                     }
 
+                    // if rowNumber exists in failedArray, then highlight the row
+                    if(failedArray.index.includes(rowNumber - 6)) {
+                        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                            cell.fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFFABF8F' },
+                                bgColor: { argb: 'FFFABF8F' }
+                            }
+                        });
+                    }
+
                 });
 
 
 
-                // Write to File
+                // Write data to XLSX file
                 await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/IEDC_Analytics.xlsx')).then(() => {
                     console.log("XLSX file generated");
                     resolve({
@@ -120,17 +135,25 @@ module.exports = {
 
 
                 
+            // }).catch((err) => {
+            //     console.log("--- [analytics] --- Error in fetching data from database: " + err);
+            //     reject({
+            //         status: "error",
+            //         message: "Error in fetching data from database: " + err,
+            //     });
             // });
 
         });
     },
 
+
     
-    getDataAsArray : async () => {
+    // Convert data to array, so that it can be used in XLSX
+    getDataAsArray : async (data, failedArray) => {
         return new Promise(async (resolve, reject) => {
 
+            // Get the subject list
             let subjectList = [];
-
             for(let i = 0; i < data[0].data.result.subjects.length; i++) {
                 subjectList.push(data[0].data.result.subjects[i].course);
             }
@@ -147,18 +170,35 @@ module.exports = {
                 }
             };
 
+            // Get the overall marks and grades
             for(let i = 0; i < data.length; i++) {
                 
                 results.prn.push(data[i].data.prn);
                 results.names.push(data[i].data.name);
 
-                results.overall.marks.push(data[i].data.result.total);
-                results.overall.cp.push(data[i].data.result.credit_points);
-                results.overall.grade.push(data[i].data.result.grade);
-                results.overall.sgpa.push(data[i].data.result.scpa);
+                let markHolder = data[i].data.result.total;
+                let cpHolder = data[i].data.result.credit_points;
+                let gradeHolder = data[i].data.result.grade;
+                let sgpaHolder = data[i].data.result.scpa;
+
+                if(markHolder === null) {
+                    failedArray.index.push(i);
+                }
+
+                // Handling null values in the data with "-" and "F"
+                markHolder === null ? markHolder = "-" : markHolder = markHolder;
+                cpHolder === null ? cpHolder = "-" : cpHolder = cpHolder;
+                gradeHolder === null ? gradeHolder = "F" : gradeHolder = gradeHolder;
+                sgpaHolder === null ? sgpaHolder = "-" : sgpaHolder = sgpaHolder;
+
+                results.overall.marks.push(markHolder);
+                results.overall.cp.push(cpHolder);
+                results.overall.grade.push(gradeHolder);
+                results.overall.sgpa.push(sgpaHolder);
 
             }
 
+            // Get the subject wise marks and grades
             for(let i = 0; i < data[0].data.result.subjects.length; i++) {
                 
                 let subject = {
@@ -171,6 +211,7 @@ module.exports = {
                     let markHolder = data[j].data.result.subjects[i].total;
                     let gradeHolder = data[j].data.result.subjects[i].grade;
 
+                    // Handling null values in the data with "-" and "F"
                     markHolder === null ? markHolder = "-" : markHolder = markHolder;
                     gradeHolder === null ? gradeHolder = "F" : gradeHolder = gradeHolder;
 
@@ -192,3 +233,5 @@ module.exports = {
     },
 
 };
+
+
