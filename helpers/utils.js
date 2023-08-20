@@ -5,7 +5,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 
-let htmlTemplate = path.join(__dirname, '../public/email_templates/index.html');
+let htmlTemplate = path.join(__dirname, '../public/templates/student_email.html');
 let htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 
 module.exports = {
