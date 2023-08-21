@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express')
-// const { spawn } = require('child_process');
+const { spawn } = require('child_process');
 
 const db = require('./config/db');
 const data = require('./public/data/mca_2020.json');
@@ -84,7 +84,7 @@ app.get('/test', async (req, res) => {
     var dataToSend;
 
     // spawn new child process to call the python script
-    const python = spawn('python', ['./helpers/subroutine.py']);
+    const python = spawn('python', ['./helpers/xlsx_pdf.py']);
 
     // collect data from script
     python.stdout.on('data', (data) => {
