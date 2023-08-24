@@ -9,6 +9,7 @@ const utils = require('./helpers/utils.js');
 const process_ug = require('./helpers/process_UG.js');
 const process_pg = require('./helpers/process_PG.js');
 const xlsx = require('./helpers/xlsx.js');
+const analytics = require('./helpers/analytics.js');
 
 const app = express()
 
@@ -73,7 +74,8 @@ app.get('/xlsx', async (req, res) => {
 
 app.get('/analytics', async (req, res) => {
 
-    
+    let result = await analytics.generate_XLSX();
+    res.send(result);
 
 });
 

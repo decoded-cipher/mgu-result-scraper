@@ -92,5 +92,29 @@ module.exports = {
     },
 
 
+    // Get the top 5 students from a department based on their marks in descending order (data.result.total)
+    getTop5ByDept : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getTop5ByDept] --- Fetching data for : " + programme);
+
+            // Fetch data from database
+            db.collection(collectionName).find({ "data.programme": programme }).sort({ "data.result.total": -1 }).limit(5).toArray((err, result) => {
+                if (err) {
+                    console.log("--- [getTop5ByDept] --- Error in fetching data: \n");
+                    reject(err);
+                } else {
+                    console.log("--- [getTop5ByDept] --- Data fetched successfully: \n");
+                    resolve(result);
+                }
+            });
+
+        });
+
+    }
+
 
 }
