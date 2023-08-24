@@ -8,7 +8,7 @@ const data = require('./public/data/mca_2020.json');
 const utils = require('./helpers/utils.js');
 const process_ug = require('./helpers/process_UG.js');
 const process_pg = require('./helpers/process_PG.js');
-const analytics = require('./helpers/analytics.js');
+const xlsx = require('./helpers/xlsx.js');
 
 const app = express()
 
@@ -58,9 +58,9 @@ app.get('/', async (req, res) => {
 
 
 
-app.get('/analytics', async (req, res) => {
+app.get('/xlsx', async (req, res) => {
 
-    let result = await analytics.generate_XLSX();
+    let result = await xlsx.generate_XLSX();
     res.send(result);
     
 });
@@ -71,7 +71,11 @@ app.get('/analytics', async (req, res) => {
 
 
 
+app.get('/analytics', async (req, res) => {
 
+    
+
+});
 
 
 
@@ -100,6 +104,12 @@ app.get('/test', async (req, res) => {
     });
 
 });
+
+
+
+
+
+
 
 
 
