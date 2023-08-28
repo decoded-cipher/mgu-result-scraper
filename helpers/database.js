@@ -48,20 +48,20 @@ module.exports = {
             console.log("--- [saveData] --- Saving data for: " + qid + " in collection: " + collectionName);
 
             // Insert data into database
-            db.collection(collectionName).insertOne({ 
-                    qid: qid,
-                    created_at: new Date(), 
-                    data: data
-                }, (err, result) => {
-                    if (err) {
-                        console.log("--- [saveData] --- Error in inserting data: " + err + "\n");
-                        reject(err);
-                    } else {
-                        console.log("--- [saveData] --- Data inserted successfully: " + result + "\n");
-                        resolve(result);
-                    }
+            db.collection(collectionName).insertOne({
+                qid: qid,
+                created_at: new Date(),
+                data: data
+            }, (err, result) => {
+                if (err) {
+                    console.log("--- [saveData] --- Error in inserting data: " + err + "\n");
+                    reject(err);
+                } else {
+                    console.log("--- [saveData] --- Data inserted successfully: " + result + "\n");
+                    resolve(result);
+                }
             });
-            
+
         });
 
     },
@@ -114,7 +114,179 @@ module.exports = {
 
         });
 
-    }
+    },
+
+
+    // Get the count of pass and fail of each subject in a department
+    getSubjectPassFailCount : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getSubjectPassFailCount] --- Fetching data for : " + programme);
+
+            db.collection(collectionName).aggregate([
+                { $match: { "data.programme": programme } },
+                { $unwind: "$data.result.subjects" },
+                {
+                    $group: {
+                        _id: "$data.result.subjects.course",
+                        pass: { $sum: { $cond: [{ $eq: ["$data.result.subjects.result", "Passed"] }, 1, 0] } },
+                        fail: { $sum: { $cond: [{ $eq: ["$data.result.subjects.result", "Failed"] }, 1, 0] } }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        name: "$_id",
+                        pass: 1,
+                        fail: 1
+                    }
+                }
+            ]).toArray((err, result) => {
+                if (err) {
+                    console.log("--- [getSubjectPassFailCount] --- Error in fetching data: \n");
+                    reject(err);
+                } else {
+                    console.log("--- [getSubjectPassFailCount] --- Data fetched successfully: \n");
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
+
+    // get subject wise top marks
+    getSubjectTopMarks : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getSubjectTopMarks] --- Fetching data for : " + programme);
+
+            db.collection(collectionName).aggregate([
+                { $match: { "data.programme": programme } },
+                { $unwind: "$data.result.subjects" },
+                {
+                    $group: {
+                        _id: "$data.result.subjects.course",
+                        result: { $max: "$data.result.subjects" }
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        result: 1
+                    }
+                }
+
+            ]).toArray(async (err, topMarks) => {
+                if (err) {
+                    console.log("--- [getSubjectTopMarks] --- Error in fetching data: \n");
+                    reject(err);
+                } else {
+                    console.log("--- [getSubjectTopMarks] --- Data fetched successfully: \n");
+                    resolve(topMarks);
+                }
+            });
+
+        });
+
+    },
+
+
+
+    // get subject wise top mark holders
+    getAllSubjectToppers : async () => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getAllSubjectToppers] --- Fetching data for : " + programme);
+
+            // get subject wise top marks first
+            let topMarks = await module.exports.getSubjectTopMarks();
+
+            let topMarkHolders = [];
+
+            // get subject wise toppers
+            for (let i = 0; i < topMarks.length; i++) {
+                let result = await module.exports.getSubjectTopper(topMarks[i].result.course, topMarks[i].result.total);
+                topMarkHolders.push(result);
+            }
+
+            console.log("--- [getAllSubjectToppers] --- Data fetched successfully: \n");
+
+            topMarkHolders.forEach((sub, index) => {
+                let item = {
+                    course: topMarks[index].result.course,
+                    count: sub.length,
+                    marks: topMarks[index].result.total,
+                    grade: topMarks[index].result.grade,
+                    toppers: []
+                }
+
+                sub.forEach((student) => {
+                    item.toppers.push({
+                        name: student.name,
+                        prn: student.prn
+                    });
+                });
+
+                topMarkHolders[index] = item;
+            });
+
+            resolve(topMarkHolders);
+
+        });
+
+    },
+
+
+    // get subject wise topper
+    getSubjectTopper : async (course, total) => {
+        return new Promise(async (resolve, reject) => {
+
+            let collectionName = "exam_90";
+            let programme = "Bachelor of Computer Application";
+
+            console.log("--- [getSubjectTopper] --- Fetching data for : " + programme);
+
+            db.collection(collectionName).aggregate([
+                { $match: { "data.programme": programme } },
+                { $unwind: "$data.result.subjects" },
+                { $match: { "data.result.subjects.course": course, "data.result.subjects.total": total } },
+                {
+                    $project: {
+                        _id: 0,
+                        name: "$data.name",
+                        prn: "$data.prn",
+                        grade: "$data.result.subjects.grade",
+                        course: "$data.result.subjects.course",
+                        marks: "$data.result.subjects.total"
+                    }
+                }
+
+            ]).toArray((err, result) => {
+                if (err) {
+                    console.log("--- [getSubjectTopper] --- Error in fetching data: \n");
+                    reject(err);
+                } else {
+                    console.log("--- [getSubjectTopper] --- Data fetched successfully: \n");
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
 
 
 }

@@ -2,9 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const ExcelJS = require('exceljs');
 
-const { getTop5ByDept } = require('./database');
+const { getTop5ByDept, getSubjectPassFailCount, getAllSubjectToppers } = require('./database');
+
 const data = require('../public/xlsx/analytics.json');
 const classTop5 = require('../public/xlsx/classTop5.json');
+const subjectPassFailCount = require('../public/xlsx/subjectPassFailCount.json');
+const subjectToppers = require('../public/xlsx/subjectToppers.json');
 
 module.exports = {
 
@@ -12,7 +15,8 @@ module.exports = {
         return new Promise(async (resolve, reject) => {
 
             // let classTop5 = await getTop5ByDept();
-
+            // let subjectPassFailCount = await getSubjectPassFailCount();
+            // let subjectToppers = await getAllSubjectToppers();
 
 
 
@@ -104,31 +108,59 @@ module.exports = {
 
 
 
-            // Overall Toppers Table
-            worksheet.mergeCells('A' + (11 + data.subjects.length) + ':L' + (11 + data.subjects.length));
-            worksheet.getCell('A' + (11 + data.subjects.length)).value = 'Overall Toppers List';
+            // Subject-wise Overall Results Table
+            worksheet.mergeCells('A' + (11 + data.subjects.length) + ':G' + (11 + data.subjects.length));
+            worksheet.getCell('A' + (11 + data.subjects.length)).value = 'Subject-wise Overall Results';
 
-            for(let i = 0; i < classTop5.length + 1; i++) {
-                worksheet.mergeCells('B' + (12 + data.subjects.length + i) + ':E' + (12 + data.subjects.length + i));
-                worksheet.mergeCells('F' + (12 + data.subjects.length + i) + ':I' + (12 + data.subjects.length + i));
+            for (let i = 0; i < data.subjects.length + 1; i++) {
+                worksheet.mergeCells('A' + (12 + data.subjects.length + i) + ':E' + (12 + data.subjects.length + i));
             }
 
-            worksheet.getCell('A' + (12 + data.subjects.length)).value = 'No:';
-            worksheet.getCell('B' + (12 + data.subjects.length)).value = 'Permenant Registation Number';
-            worksheet.getCell('F' + (12 + data.subjects.length)).value = 'Name of the Student';
-            worksheet.getCell('J' + (12 + data.subjects.length)).value = 'Marks';
-            worksheet.getCell('K' + (12 + data.subjects.length)).value = 'SCPA';
-            worksheet.getCell('L' + (12 + data.subjects.length)).value = 'Grade';
+            worksheet.getCell('A' + (12 + data.subjects.length)).value = 'Subjects';
+            worksheet.getCell('F' + (12 + data.subjects.length)).value = 'Pass';
+            worksheet.getCell('G' + (12 + data.subjects.length)).value = 'Fail';
+
+            for (let i = 0; i < data.subjects.length; i++) {
+                worksheet.getCell('A' + (13 + data.subjects.length + i)).value = data.subjects[i].name;
+                // worksheet.getCell('F' + (13 + data.subjects.length + i)).value = data.subjects[i].pass.count;
+                // worksheet.getCell('G' + (13 + data.subjects.length + i)).value = data.subjects[i].fail.count;
+
+                worksheet.getCell('F' + (13 + data.subjects.length + i)).value = 'ss'
+                worksheet.getCell('G' + (13 + data.subjects.length + i)).value = 'nn'
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // Overall Toppers Table
+            worksheet.mergeCells('I' + (11 + data.subjects.length) + ':O' + (11 + data.subjects.length));
+            worksheet.getCell('I' + (11 + data.subjects.length)).value = 'Overall Toppers List';
+
+            for(let i = 0; i < classTop5.length + 1; i++) {
+                worksheet.mergeCells('J' + (12 + data.subjects.length + i) + ':L' + (12 + data.subjects.length + i));
+            }
+
+            worksheet.getCell('I' + (12 + data.subjects.length)).value = 'No:';
+            worksheet.getCell('J' + (12 + data.subjects.length)).value = 'Name of the Student';
+            worksheet.getCell('M' + (12 + data.subjects.length)).value = 'Marks';
+            worksheet.getCell('N' + (12 + data.subjects.length)).value = 'SCPA';
+            worksheet.getCell('O' + (12 + data.subjects.length)).value = 'Grade';
 
             for(let i = 0; i < classTop5.length; i++) {
-                worksheet.getCell('A' + (13 + data.subjects.length + i)).value = i + 1;
-                worksheet.getCell('B' + (13 + data.subjects.length + i)).value = classTop5[i].data.prn;
-                worksheet.getCell('F' + (13 + data.subjects.length + i)).value = classTop5[i].data.name;
-                worksheet.getCell('J' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.total;
-                worksheet.getCell('K' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.scpa;
-                worksheet.getCell('L' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.grade;
-
-                // worksheet.getCell('B' + (13 + data.subjects.length + i)).numFmt = '0';
+                worksheet.getCell('I' + (13 + data.subjects.length + i)).value = i + 1;
+                worksheet.getCell('J' + (13 + data.subjects.length + i)).value = classTop5[i].data.name;
+                worksheet.getCell('M' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.total;
+                worksheet.getCell('N' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.scpa;
+                worksheet.getCell('O' + (13 + data.subjects.length + i)).value = classTop5[i].data.result.grade;
             }
 
             
@@ -190,14 +222,21 @@ module.exports = {
 
 
             // Write data to XLSX file
-            await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
-                console.log("Result Analysis file generated");
-                resolve({
-                    status: "success",
-                    message: "Result Analysis file generated",
-                });
-            });
+            // await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
+            //     console.log("Result Analysis file generated");
+            //     resolve({
+            //         status: "success",
+            //         message: "Result Analysis file generated",
+            //     });
+            // });
 
+
+
+
+            resolve({
+                status: "success",
+                subjectPassFailCount: subjectPassFailCount,
+            });
 
 
 
