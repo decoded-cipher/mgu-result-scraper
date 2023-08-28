@@ -18,13 +18,18 @@ module.exports = {
             // let subjectPassFailCount = await getSubjectPassFailCount();
             // let subjectToppers = await getAllSubjectToppers();
 
+            // sort subjectToppers array based on count in ascending order
+            // subjectToppers.sort((a, b) => {
+            //     return a.count - b.count;
+            // });
+
 
 
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Analysis', {
                 pageSetup: { 
                     paperSize: 9,
-                    orientation: 'landscape',
+                    orientation: 'Portrait',
                     fitToPage: true,
                     fitToWidth: 1,
                     fitToHeight: 0,
@@ -121,12 +126,9 @@ module.exports = {
             worksheet.getCell('G' + (12 + data.subjects.length)).value = 'Fail';
 
             for (let i = 0; i < data.subjects.length; i++) {
-                worksheet.getCell('A' + (13 + data.subjects.length + i)).value = data.subjects[i].name;
-                // worksheet.getCell('F' + (13 + data.subjects.length + i)).value = data.subjects[i].pass.count;
-                // worksheet.getCell('G' + (13 + data.subjects.length + i)).value = data.subjects[i].fail.count;
-
-                worksheet.getCell('F' + (13 + data.subjects.length + i)).value = 'ss'
-                worksheet.getCell('G' + (13 + data.subjects.length + i)).value = 'nn'
+                worksheet.getCell('A' + (13 + data.subjects.length + i)).value = subjectPassFailCount[i].name;
+                worksheet.getCell('F' + (13 + data.subjects.length + i)).value = subjectPassFailCount[i].pass;
+                worksheet.getCell('G' + (13 + data.subjects.length + i)).value = subjectPassFailCount[i].fail;
             }
 
 
@@ -165,9 +167,57 @@ module.exports = {
 
             
 
+            // Subject-wise Toppers Table
+            worksheet.mergeCells('A' + (15 + data.subjects.length + classTop5.length) + ':M' + (15 + data.subjects.length + classTop5.length));
+            worksheet.getCell('A' + (15 + data.subjects.length + classTop5.length)).value = 'Subject-wise Toppers List';
+
+            worksheet.mergeCells('A' + (16 + data.subjects.length + classTop5.length) + ':E' + (16 + data.subjects.length + classTop5.length));
+            worksheet.getCell('A' + (16 + data.subjects.length + classTop5.length)).value = 'Subjects';
+
+            worksheet.mergeCells('F' + (16 + data.subjects.length + classTop5.length) + ':H' + (16 + data.subjects.length + classTop5.length));
+            worksheet.getCell('F' + (16 + data.subjects.length + classTop5.length)).value = 'Name of the Student';
+
+            worksheet.getCell('I' + (16 + data.subjects.length + classTop5.length)).value = 'Marks';
+            worksheet.getCell('J' + (16 + data.subjects.length + classTop5.length)).value = 'Grade';
+
+            worksheet.mergeCells('K' + (16 + data.subjects.length + classTop5.length) + ':M' + (16 + data.subjects.length + classTop5.length));
+            worksheet.getCell('K' + (16 + data.subjects.length + classTop5.length)).value = 'Name of the Teacher';
+
+            let startRow, endRow, extraRows = 0;
+
+            for(let i = 0; i < subjectToppers.length; i++) {
+                
+                startRow = 17 + data.subjects.length + classTop5.length + i;
+                endRow = 17 + data.subjects.length + classTop5.length + i;
+
+                // if(subjectToppers[i].count > 1) {
+
+                    startRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
+                    extraRows += subjectToppers[i].count - 1;
+                    endRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
+                    
+                // }
+                
+                worksheet.mergeCells('A' + (startRow) + ':E' + (endRow));
+                worksheet.getCell('A' + (startRow)).value = subjectToppers[i].course;
+
+                for(let j = 0; j < subjectToppers[i].toppers.length; j++) {
+                    worksheet.mergeCells('F' + (startRow + j) + ':H' + (startRow + j));
+                    worksheet.getCell('F' + (startRow + j)).value = subjectToppers[i].toppers[j].name;
+                }
+                
+                worksheet.mergeCells('I' + (startRow) + ':I' + (endRow));
+                worksheet.getCell('I' + (startRow)).value = subjectToppers[i].marks;
+
+                worksheet.mergeCells('J' + (startRow) + ':J' + (endRow));
+                worksheet.getCell('J' + (startRow)).value = subjectToppers[i].grade;
+                
+                worksheet.mergeCells('K' + (startRow) + ':M' + (endRow));
+                worksheet.getCell('K' + (startRow)).value = "Not Available";
 
 
-
+            }
+            
 
 
 
@@ -204,6 +254,8 @@ module.exports = {
                         horizontal: 'center'
                     }
 
+                    row.height = 25;
+
                     cell.border = {
                         top: { style:'thin' },
                         left: { style:'thin' },
@@ -217,25 +269,98 @@ module.exports = {
                     }
 
                 });
+
+                // Subject-wise Grade Distribution Table
+                if(rowNumber >= 9 && rowNumber <= 9 + data.subjects.length) {
+                    row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                        if(colNumber <= 5) {
+
+                            cell.alignment = {
+                                wrapText: true,
+                                vertical: 'middle',
+                                horizontal: 'left',
+                                indent: 2,
+                            }
+
+                        }
+                    });
+                }
+                
+                // Subject-wise Overall Results Table & Overall Toppers Table
+                if(rowNumber >= 9 + data.subjects.length + 2 && rowNumber <= 9 + data.subjects.length + data.subjects.length + 3) {
+                    row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                        if(colNumber <= 5 || (colNumber >= 10 && colNumber <= 12)) {
+
+                            cell.alignment = {
+                                wrapText: true,
+                                vertical: 'middle',
+                                horizontal: 'left',
+                                indent: 2,
+                            }
+
+                        }
+                    });
+                }
+
+                // Subject-wise Toppers Table
+                if(rowNumber >= 9 + data.subjects.length + data.subjects.length + 5) {
+                    row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                        if(colNumber <= 8 || (colNumber >= 11 && colNumber <= 13)) {
+
+                            cell.alignment = {
+                                wrapText: true,
+                                vertical: 'middle',
+                                horizontal: 'left',
+                                indent: 2,
+                            }
+
+                        }
+                    });
+                }
+
+                // Dark Grey Rows
+                if(rowNumber == 4 || rowNumber == 8 || rowNumber == 8 + data.subjects.length + 3 || rowNumber == 8 + data.subjects.length + data.subjects.length + 6) {
+                    row.height = 35;
+                    row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+
+                        cell.alignment = {
+                            wrapText: true,
+                            vertical: 'middle',
+                            horizontal: 'center',
+                        }
+
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFD9D9D9' }
+                        }
+
+                    });
+                }
+
+                // Light Grey Rows
+                if(rowNumber == 5 || rowNumber == 6 || rowNumber == 9 || rowNumber == 9 + data.subjects.length + 3 || rowNumber == 9 + data.subjects.length + data.subjects.length + 6) {
+                    row.height = 30;
+                    row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFF2F2F2' }
+                        }
+                    });
+                }
             });
 
 
 
             // Write data to XLSX file
-            // await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
-            //     console.log("Result Analysis file generated");
-            //     resolve({
-            //         status: "success",
-            //         message: "Result Analysis file generated",
-            //     });
-            // });
-
-
-
-
-            resolve({
-                status: "success",
-                subjectPassFailCount: subjectPassFailCount,
+            await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
+                console.log("Result Analysis file generated");
+                resolve({
+                    status: "success",
+                    message: "Result Analysis file generated",
+                    subjectToppers: subjectToppers
+                });
             });
 
 
