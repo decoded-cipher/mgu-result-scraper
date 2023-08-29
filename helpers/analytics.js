@@ -18,12 +18,6 @@ module.exports = {
             // let subjectPassFailCount = await getSubjectPassFailCount();
             // let subjectToppers = await getAllSubjectToppers();
 
-            // sort subjectToppers array based on count in ascending order
-            // subjectToppers.sort((a, b) => {
-            //     return a.count - b.count;
-            // });
-
-
 
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Analysis', {
@@ -43,7 +37,10 @@ module.exports = {
 
 
 
-            // Add metadata to the XLSX file
+            // ------------------------------ Metadata ------------------------------ //
+
+
+
             workbook.creator = 'Inovus Labs';
             workbook.lastModifiedBy = 'Arjun Krishna';
 
@@ -63,7 +60,10 @@ module.exports = {
 
 
 
-            // Overall Results Table
+            // ------------------------------ Overall Results Table ------------------------------ //
+
+
+
             worksheet.mergeCells('A4:C4');
             worksheet.getCell('A4').value = 'Overall Results';
 
@@ -76,7 +76,11 @@ module.exports = {
             worksheet.getCell('C6').value = data.overall.pass.count + data.overall.fail.count;
 
 
-            // Overall Grade Distribution Table
+
+            // ------------------------------ Overall Results Table ------------------------------ //
+
+
+
             worksheet.mergeCells('E4:M4');
             worksheet.getCell('E4').value = 'Overall Grade Distribution';
 
@@ -89,7 +93,11 @@ module.exports = {
             });
 
 
-            // Subject-wise Grade Distribution Table
+
+            // ------------------------------ Subject-wise Results Table ------------------------------ //
+
+
+
             worksheet.mergeCells('A8:M8');
             worksheet.getCell('A8').value = 'Subject-wise Grade Distribution';
 
@@ -113,7 +121,10 @@ module.exports = {
 
 
 
-            // Subject-wise Overall Results Table
+            // ------------------------------ Subject-wise Overall Results Table ------------------------------ //
+
+
+
             worksheet.mergeCells('A' + (11 + data.subjects.length) + ':G' + (11 + data.subjects.length));
             worksheet.getCell('A' + (11 + data.subjects.length)).value = 'Subject-wise Overall Results';
 
@@ -133,17 +144,10 @@ module.exports = {
 
 
 
+            // ------------------------------ Overall Toppers Table ------------------------------ //
 
 
 
-
-
-
-
-
-
-
-            // Overall Toppers Table
             worksheet.mergeCells('I' + (11 + data.subjects.length) + ':O' + (11 + data.subjects.length));
             worksheet.getCell('I' + (11 + data.subjects.length)).value = 'Overall Toppers List';
 
@@ -167,7 +171,10 @@ module.exports = {
 
             
 
-            // Subject-wise Toppers Table
+            // ------------------------------ Subject-wise Toppers Table ------------------------------ //
+
+
+
             worksheet.mergeCells('A' + (15 + data.subjects.length + classTop5.length) + ':M' + (15 + data.subjects.length + classTop5.length));
             worksheet.getCell('A' + (15 + data.subjects.length + classTop5.length)).value = 'Subject-wise Toppers List';
 
@@ -190,13 +197,9 @@ module.exports = {
                 startRow = 17 + data.subjects.length + classTop5.length + i;
                 endRow = 17 + data.subjects.length + classTop5.length + i;
 
-                // if(subjectToppers[i].count > 1) {
-
-                    startRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
-                    extraRows += subjectToppers[i].count - 1;
-                    endRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
-                    
-                // }
+                startRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
+                extraRows += subjectToppers[i].count - 1;
+                endRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
                 
                 worksheet.mergeCells('A' + (startRow) + ':E' + (endRow));
                 worksheet.getCell('A' + (startRow)).value = subjectToppers[i].course;
@@ -215,36 +218,14 @@ module.exports = {
                 worksheet.mergeCells('K' + (startRow) + ':M' + (endRow));
                 worksheet.getCell('K' + (startRow)).value = "Not Available";
 
-
             }
-            
+    
 
 
-
-
-
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            // ------------------------------ Styling ------------------------------ //
 
             
 
-            // Styling the XLSX file (fonts, borders, alignment, etc.)
             worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
                 row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
 
@@ -353,7 +334,10 @@ module.exports = {
 
 
 
-            // Write data to XLSX file
+            // ------------------------------ Write to XLSX file ------------------------------ //
+
+
+
             await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
                 console.log("Result Analysis file generated");
                 resolve({
@@ -362,8 +346,6 @@ module.exports = {
                     subjectToppers: subjectToppers
                 });
             });
-
-
 
         });
     }
