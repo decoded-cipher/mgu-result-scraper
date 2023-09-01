@@ -5,6 +5,8 @@ const db = require('../config/db');
 
 module.exports = {
 
+
+    
     // Generate unique id for each record
     generateQid: (student_id, exam_id) => {
         let hash = crypto.createHash('md5');
@@ -14,6 +16,7 @@ module.exports = {
         console.log("--- [generateQid] --- Hash generated: " + qid);
         return qid;
     },
+
 
 
     // Check if data already exists
@@ -36,6 +39,7 @@ module.exports = {
 
         });
     },
+
 
 
     // Save data to database
@@ -67,12 +71,13 @@ module.exports = {
     },
 
 
+
     // Fetch data from database
-    getDataByDept : async () => {
+    getDataByDept : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
 
             console.log("--- [getDataByDept] --- Fetching data for : " + programme);
 
@@ -92,12 +97,13 @@ module.exports = {
     },
 
 
+
     // Get the top 5 students from a department based on their marks in descending order (data.result.total)
-    getTop5ByDept : async () => {
+    getTop5ByDept : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
 
             console.log("--- [getTop5ByDept] --- Fetching data for : " + programme);
 
@@ -117,12 +123,13 @@ module.exports = {
     },
 
 
+
     // Get the count of pass and fail of each subject in a department
-    getSubjectPassFailCount : async () => {
+    getSubjectPassFailCount : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
 
             console.log("--- [getSubjectPassFailCount] --- Fetching data for : " + programme);
 
@@ -160,13 +167,12 @@ module.exports = {
 
 
 
-
     // get subject wise top marks
-    getSubjectTopMarks : async () => {
+    getSubjectTopMarks : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
 
             console.log("--- [getSubjectTopMarks] --- Fetching data for : " + programme);
 
@@ -203,22 +209,19 @@ module.exports = {
 
 
     // get subject wise top mark holders
-    getAllSubjectToppers : async () => {
+    getAllSubjectToppers : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
-
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
 
             console.log("--- [getAllSubjectToppers] --- Fetching data for : " + programme);
 
             // get subject wise top marks first
-            let topMarks = await module.exports.getSubjectTopMarks();
+            let topMarks = await module.exports.getSubjectTopMarks(exam_id, programme);
 
             let topMarkHolders = [];
 
             // get subject wise toppers
             for (let i = 0; i < topMarks.length; i++) {
-                let result = await module.exports.getSubjectTopper(topMarks[i].result.course, topMarks[i].result.total);
+                let result = await module.exports.getSubjectTopper(topMarks[i].result.course, topMarks[i].result.total, exam_id, programme);
                 topMarkHolders.push(result);
             }
 
@@ -250,12 +253,13 @@ module.exports = {
     },
 
 
+
     // get subject wise topper
-    getSubjectTopper : async (course, total) => {
+    getSubjectTopper : async (course, total, exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
-            let collectionName = "exam_90";
-            let programme = "Bachelor of Computer Application";
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
 
             console.log("--- [getSubjectTopper] --- Fetching data for : " + programme);
 
@@ -287,6 +291,7 @@ module.exports = {
         });
 
     },
+
 
 
 }
