@@ -1,4 +1,9 @@
 node_modules
-results
-secure
 .env
+
+public/screenshots
+public/secure_pdfs
+public/analytics
+public/data
+public/xlsx
+public/graphs
