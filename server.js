@@ -8,7 +8,8 @@ const data = require('./public/data/mca_2020.json');
 const utils = require('./helpers/utils.js');
 const process_ug = require('./helpers/process_UG.js');
 const process_pg = require('./helpers/process_PG.js');
-const xlsx = require('./helpers/xlsx.js');
+const cons_sheet = require('./helpers/cons_sheet_xlsx.js');
+const obe_xlsx = require('./helpers/obe_sheet_xlsx.js');
 const analytics = require('./helpers/analytics.js');
 
 const app = express()
@@ -17,8 +18,8 @@ db.connect();
 
 
 let exam_id = "90";
-let programme = "Bachelor of Computer Application";
-let title = "BCA Degree (C.B.C.S) University Examination Results"
+let programme = "B.Sc Geology Model I";
+let title = "B.Sc Geology Degree (C.B.C.S) University Examination Results"
 
 
 app.get('/', async (req, res) => {
@@ -56,26 +57,34 @@ app.get('/', async (req, res) => {
     //     await processMode.processAllResults(data.students, data.exam_id).then(async (process) => {
 
 
-            await xlsx.generate_XLSX(exam_id, programme, title).then(async (xlsx) => {
-                await analytics.generate_Tables_XLSX(xlsx.resultStats, exam_id, programme, title).then(async (tables) => {
-                    await analytics.fetch_Graphs(xlsx.resultStats, title).then(async (graphs) => {
+        await cons_sheet.generate_XLSX(exam_id, programme, title).then(async (obe_sheet) => {
+            await obe_xlsx.generate_XLSX(exam_id, programme, title).then(async (cons_sheet) => {
+                
+                await analytics.generate_Tables_XLSX(cons_sheet.resultStats, exam_id, programme, title).then(async (tables) => {
+                    await analytics.fetch_Graphs(cons_sheet.resultStats, title).then(async (graphs) => {
 
 
                         res.send({
                             // fetch: fetch,
                             // process: process,
-                            xlsx: {
-                                status: xlsx.status,
-                                message: xlsx.message,
+                            obe_sheet: {
+                                status: obe_sheet.status,
+                                message: obe_sheet.message,
                             },
-                            tables: tables,
+                            cons_sheet: {
+                                status: cons_sheet.status,
+                                message: cons_sheet.message,
+                            },
+                            overall: tables,
                             graphs: graphs,
                         });
 
 
                     }).catch((err) => { res.send(err); })
                 }).catch((err) => { res.send(err); });
+
             }).catch((err) => { res.send(err); });
+        }).catch((err) => { res.send(err); });
 
 
     //     }).catch((err) => { res.send(err); });
