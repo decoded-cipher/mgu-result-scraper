@@ -8,38 +8,38 @@ const { saveData, checkQid, generateQid } = require('./database.js');
 
 module.exports = {
 
-    fetchAllResults : async (students, exam_id) => {
-        for (let i = 0; i < students.length; i++) {
+    fetchAllResults : async (start_prn, end_prn, exam_id) => {
+        for (let i = start_prn; i <= end_prn; i++) {
 
-            let qid = generateQid(students[i].prn, exam_id);
+            let qid = generateQid(i, exam_id);
             let result = await checkQid(exam_id, qid);
 
             if (result) {
                 console.log("--- [fetchAllResults] --- Data already present in database. Skipping data fetch... \n");
             } else {
-                console.log(`--- [fetchAllResults] --- Fetching result for ${students[i].prn} \n`);
-                await module.exports.fetchResult(students[i].prn, exam_id);
+                console.log(`--- [fetchAllResults] --- Fetching result for ${i}`);
+                await module.exports.fetchResult(String(i), exam_id);
             }
 
         }
-        console.log(chalk.greenBright("\n--- [fetchAllResults] All results fetched \n"));
+        console.log(chalk.greenBright("\n--- [fetchAllResults] --- All results fetched \n"));
     },
 
 
 
 
 
-    processAllResults : async (students, exam_id) => {
-        for (let i = 0; i < students.length; i++) {
+    processAllResults : async (start_prn, end_prn, exam_id) => {
+        for (let i = start_prn; i <= end_prn; i++) {
 
-            let qid = generateQid(students[i].prn, exam_id);
+            let qid = generateQid(i, exam_id);
             let result = await checkQid(exam_id, qid);
 
             if (result) {
                 console.log("--- [processAllResults] --- Data already present in database. Skip data processing...\n");
             } else {
-                console.log(`--- [processAllResults] --- Processing result for ${students[i].prn}`);
-                await module.exports.processResult(students[i].prn, exam_id, qid);
+                console.log(`--- [processAllResults] --- Processing result for ${i}`);
+                await module.exports.processResult(i, exam_id, qid);
             }
 
         }

@@ -62,7 +62,7 @@ module.exports = {
                     console.log(chalk.redBright("--- [saveData] --- Error in inserting data: " + err + "\n"));
                     reject(err);
                 } else {
-                    console.log(chalk.yellowBright("--- [saveData] --- Data inserted successfully: " + result + "\n"));
+                    console.log(chalk.greenBright("--- [saveData] --- Data inserted successfully: " + result + "\n"));
                     resolve(result);
                 }
             });

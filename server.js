@@ -19,8 +19,11 @@ db.connect();
 
 
 let exam_id = "90";
+let start_prn = 220021052174;
+let end_prn = 220021052177;
 let programme = "B.Sc Geology Model I";
 let title = "B.Sc Geology Degree (C.B.C.S) University Examination Results"
+
 
 
 app.get('/', async (req, res) => {
@@ -54,8 +57,8 @@ app.get('/', async (req, res) => {
         // console.log("--- -------------------- ---");
 
 
-        // await processMode.fetchAllResults(data.students, data.exam_id).then(async (fetch) => {
-            await processMode.processAllResults(data.students, data.exam_id).then(async (process) => {
+        // await processMode.fetchAllResults(start_prn, end_prn, exam_id).then(async (fetch) => {
+            await processMode.processAllResults(start_prn, end_prn, exam_id).then(async (process) => {
 
 
                 // await cons_sheet.generate_XLSX(exam_id, programme, title).then(async (obe_sheet) => {
