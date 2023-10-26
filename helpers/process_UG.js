@@ -1,7 +1,8 @@
-const { chromium } = require("playwright");
-const fs = require('fs');
-const path = require('path');
-const { saveData, checkQid, generateQid } = require('./database.js');
+let { chromium } = require("playwright");
+let fs = require('fs');
+let path = require('path');
+let chalk = require('chalk');
+let { saveData, checkQid, generateQid } = require('./database.js');
 
 
 
@@ -14,14 +15,14 @@ module.exports = {
             let result = await checkQid(exam_id, qid);
 
             if (result) {
-                console.log("--- [fetchAllResults] Data already present in database. Skipping data fetch... \\n");
+                console.log("--- [fetchAllResults] Data already present in database. Skipping data fetch... \n");
             } else {
-                console.log(`--- [fetchAllResults] Fetching result for ${students[i].prn} \n`);
+                console.log(`--- [fetchAllResults] Fetching result for ${students[i].prn}`);
                 await module.exports.fetchResult(students[i].prn, exam_id);
             }
 
         }
-        console.log("\n--- [fetchAllResults] All results fetched \n");
+        console.log(chalk.greenBright("\n--- [fetchAllResults] All results fetched \n"));
     },
 
 
@@ -42,7 +43,7 @@ module.exports = {
             }
 
         }
-        console.log("\n--- [processAllResults] --- All results processed \n");
+        console.log(chalk.greenBright("\n--- [processAllResults] --- All results processed \n"));
     },
 
 
@@ -62,19 +63,27 @@ module.exports = {
         await page.fill('#prn', student_id);
         await page.click('button#btnresult');
 
-        await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(2)', { visible: true });
-        await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
+        // wait for the result table to load
+        try {
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(2)', { visible: true, timeout: 10000 });
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true, timeout: 10000 });
+            console.log(chalk.greenBright(`--- [fetchResult] --- Result loaded for ${student_id} \n`));
+        } catch (error) {
+            console.log(chalk.redBright(`--- [fetchResult] --- Result not found for ${student_id} \n`));
+            await browser.close();
+            return;
+        }
 
         // // wait for 2 seconds
         // await page.waitForTimeout(1000);
 
         // // get the result table
-        const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(2)');
-        const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
+        let studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(2)');
+        let resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
         
         // // get the result table html
-        const studentDetailsHTML = await studentDetails.innerHTML();
-        const resultTableHTML = await resultTable.innerHTML();
+        let studentDetailsHTML = await studentDetails.innerHTML();
+        let resultTableHTML = await resultTable.innerHTML();
         
         // // create folder if it doesn't exist with the name as exam_id inside public/analytics
         if (fs.existsSync(path.join(__dirname, `../public/analytics/${student_id}`), { recursive: true })) {

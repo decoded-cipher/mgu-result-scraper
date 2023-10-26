@@ -1,6 +1,7 @@
 const { chromium } = require("playwright");
 const fs = require('fs');
 const path = require('path');
+let chalk = require('chalk');
 const { saveData, checkQid, generateQid } = require('./database.js');
 
 
@@ -21,7 +22,7 @@ module.exports = {
             }
 
         }
-        console.log("\n--- [fetchAllResults] --- All results fetched \n");
+        console.log(chalk.greenBright("\n--- [fetchAllResults] All results fetched \n"));
     },
 
 
@@ -42,7 +43,7 @@ module.exports = {
             }
 
         }
-        console.log("\n--- [processAllResults] --- All results processed \n");
+        console.log(chalk.greenBright("\n--- [processAllResults] --- All results processed \n"));
     },
 
 
@@ -62,14 +63,22 @@ module.exports = {
         await page.fill('#prn', student_id);
         await page.click('button#btnresult');
 
-        await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
+        try {
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
+            console.log(chalk.greenBright(`--- [fetchResult] --- Result loaded for ${student_id} \n`));
+        } catch (err) {
+            console.log(chalk.redBright(`--- [fetchResult] --- Result not found for ${student_id} \n`));
+            await browser.close();
+            return;
+        }
 
         // // wait for 2 seconds
         // await page.waitForTimeout(1000);
 
         // get the result table
-        const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
         const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
+        const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
         
         // get the result table html
         const resultTableHTML = await resultTable.innerHTML();
