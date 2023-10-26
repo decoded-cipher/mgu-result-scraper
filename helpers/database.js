@@ -1,5 +1,6 @@
 
 const crypto = require('crypto');
+let chalk = require('chalk');
 const db = require('../config/db');
 
 
@@ -29,10 +30,10 @@ module.exports = {
             // Check if data already exists
             db.collection(collectionName).findOne({ qid: qid }, async (err, result) => {
                 if (err) {
-                    console.log("--- [checkQid] --- Error in finding data: " + err);
+                    console.log(chalk.redBright("--- [checkQid] --- Error in finding data: " + err));
                     reject(err);
                 } else {
-                    console.log("--- [checkQid] --- Data found: " + result);
+                    console.log(chalk.yellowBright("--- [checkQid] --- Data found: " + result));
                     resolve(result);
                 }
             });
@@ -58,10 +59,10 @@ module.exports = {
                 data: data
             }, (err, result) => {
                 if (err) {
-                    console.log("--- [saveData] --- Error in inserting data: " + err + "\n");
+                    console.log(chalk.redBright("--- [saveData] --- Error in inserting data: " + err + "\n"));
                     reject(err);
                 } else {
-                    console.log("--- [saveData] --- Data inserted successfully: " + result + "\n");
+                    console.log(chalk.greenBright("--- [saveData] --- Data inserted successfully: " + result + "\n"));
                     resolve(result);
                 }
             });
@@ -84,10 +85,10 @@ module.exports = {
             // Fetch data from database
             db.collection(collectionName).find({ "data.programme": programme }).sort({ "data.prn": 1 }).toArray((err, result) => {
                 if (err) {
-                    console.log("--- [getDataByDept] --- Error in fetching data: \n");
+                    console.log(chalk.redBright("--- [getDataByDept] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
-                    console.log("--- [getDataByDept] --- Data fetched successfully: \n");
+                    console.log(chalk.yellowBright("--- [getDataByDept] --- Data fetched successfully: \n"));
                     resolve(result);
                 }
             });
@@ -110,10 +111,10 @@ module.exports = {
             // Fetch data from database
             db.collection(collectionName).find({ "data.programme": programme }).sort({ "data.result.total": -1 }).limit(5).toArray((err, result) => {
                 if (err) {
-                    console.log("--- [getTop5ByDept] --- Error in fetching data: \n");
+                    console.log(chalk.redBright("--- [getTop5ByDept] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
-                    console.log("--- [getTop5ByDept] --- Data fetched successfully: \n");
+                    console.log(chalk.yellowBright("--- [getTop5ByDept] --- Data fetched successfully: \n"));
                     resolve(result);
                 }
             });
@@ -153,10 +154,10 @@ module.exports = {
                 }
             ]).toArray((err, result) => {
                 if (err) {
-                    console.log("--- [getSubjectPassFailCount] --- Error in fetching data: \n");
+                    console.log(chalk.redBright("--- [getSubjectPassFailCount] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
-                    console.log("--- [getSubjectPassFailCount] --- Data fetched successfully: \n");
+                    console.log(chalk.yellowBright("--- [getSubjectPassFailCount] --- Data fetched successfully: \n"));
                     resolve(result);
                 }
             });
@@ -194,10 +195,10 @@ module.exports = {
 
             ]).toArray(async (err, topMarks) => {
                 if (err) {
-                    console.log("--- [getSubjectTopMarks] --- Error in fetching data: \n");
+                    console.log(chalk.redBright("--- [getSubjectTopMarks] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
-                    console.log("--- [getSubjectTopMarks] --- Data fetched successfully: \n");
+                    console.log(chalk.yellowBright("--- [getSubjectTopMarks] --- Data fetched successfully: \n"));
                     resolve(topMarks);
                 }
             });
@@ -225,7 +226,7 @@ module.exports = {
                 topMarkHolders.push(result);
             }
 
-            console.log("--- [getAllSubjectToppers] --- Data fetched successfully: \n");
+            console.log(chalk.yellowBright("--- [getAllSubjectToppers] --- Data fetched successfully: \n"));
 
             topMarkHolders.forEach((sub, index) => {
                 let item = {
@@ -280,10 +281,10 @@ module.exports = {
 
             ]).toArray((err, result) => {
                 if (err) {
-                    console.log("--- [getSubjectTopper] --- Error in fetching data: \n");
+                    console.log(chalk.redBright("--- [getSubjectTopper] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
-                    console.log("--- [getSubjectTopper] --- Data fetched successfully: \n");
+                    console.log(chalk.yellowBright("--- [getSubjectTopper] --- Data fetched successfully: \n"));
                     resolve(result);
                 }
             });

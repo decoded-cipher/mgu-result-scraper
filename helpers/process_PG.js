@@ -1,48 +1,49 @@
 const { chromium } = require("playwright");
 const fs = require('fs');
 const path = require('path');
+let chalk = require('chalk');
 const { saveData, checkQid, generateQid } = require('./database.js');
 
 
 
 module.exports = {
 
-    fetchAllResults : async (students, exam_id) => {
-        for (let i = 0; i < students.length; i++) {
+    fetchAllResults : async (start_prn, end_prn, exam_id) => {
+        for (let i = start_prn; i <= end_prn; i++) {
 
-            let qid = generateQid(students[i].prn, exam_id);
+            let qid = generateQid(i, exam_id);
             let result = await checkQid(exam_id, qid);
 
             if (result) {
                 console.log("--- [fetchAllResults] --- Data already present in database. Skipping data fetch... \n");
             } else {
-                console.log(`--- [fetchAllResults] --- Fetching result for ${students[i].prn} \n`);
-                await module.exports.fetchResult(students[i].prn, exam_id);
+                console.log(`--- [fetchAllResults] --- Fetching result for ${i}`);
+                await module.exports.fetchResult(String(i), exam_id);
             }
 
         }
-        console.log("\n--- [fetchAllResults] --- All results fetched \n");
+        console.log(chalk.greenBright("\n--- [fetchAllResults] --- All results fetched \n"));
     },
 
 
 
 
 
-    processAllResults : async (students, exam_id) => {
-        for (let i = 0; i < students.length; i++) {
+    processAllResults : async (start_prn, end_prn, exam_id) => {
+        for (let i = start_prn; i <= end_prn; i++) {
 
-            let qid = generateQid(students[i].prn, exam_id);
+            let qid = generateQid(i, exam_id);
             let result = await checkQid(exam_id, qid);
 
             if (result) {
                 console.log("--- [processAllResults] --- Data already present in database. Skip data processing...\n");
             } else {
-                console.log(`--- [processAllResults] --- Processing result for ${students[i].prn}`);
-                await module.exports.processResult(students[i].prn, exam_id, qid);
+                console.log(`--- [processAllResults] --- Processing result for ${i}`);
+                await module.exports.processResult(i, exam_id, qid);
             }
 
         }
-        console.log("\n--- [processAllResults] --- All results processed \n");
+        console.log(chalk.greenBright("\n--- [processAllResults] --- All results processed \n"));
     },
 
 
@@ -62,14 +63,22 @@ module.exports = {
         await page.fill('#prn', student_id);
         await page.click('button#btnresult');
 
-        await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
+        try {
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
+            console.log(chalk.greenBright(`--- [fetchResult] --- Result loaded for ${student_id} \n`));
+        } catch (err) {
+            console.log(chalk.redBright(`--- [fetchResult] --- Result not found for ${student_id} \n`));
+            await browser.close();
+            return;
+        }
 
         // // wait for 2 seconds
         // await page.waitForTimeout(1000);
 
         // get the result table
-        const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
         const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(3)');
+        const resultTable = await page.$('div#mgu_btech_contentholder table:nth-child(4)');
         
         // get the result table html
         const resultTableHTML = await resultTable.innerHTML();
