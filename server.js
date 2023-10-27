@@ -14,13 +14,13 @@ const obe_xlsx = require('./helpers/obe_sheet_xlsx.js');
 const analytics = require('./helpers/analytics.js');
 
 const app = express()
-
 db.connect();
 
 
+
 let exam_id = "90";
-let start_prn = 220021052174;
-let end_prn = 220021052177;
+let start_prn = 220021029068;
+let end_prn = 220021029080;
 let programme = "B.Sc Geology Model I";
 let title = "B.Sc Geology Degree (C.B.C.S) University Examination Results"
 
@@ -57,42 +57,42 @@ app.get('/', async (req, res) => {
         // console.log("--- -------------------- ---");
 
 
-        // await processMode.fetchAllResults(start_prn, end_prn, exam_id).then(async (fetch) => {
+        await processMode.fetchAllResults(start_prn, end_prn, exam_id).then(async (fetch) => {
             await processMode.processAllResults(start_prn, end_prn, exam_id).then(async (process) => {
 
 
-                // await cons_sheet.generate_XLSX(exam_id, programme, title).then(async (obe_sheet) => {
-                //     await obe_xlsx.generate_XLSX(exam_id, programme, title).then(async (cons_sheet) => {
+                await cons_sheet.generate_XLSX(exam_id, programme, title).then(async (obe_sheet) => {
+                    await obe_xlsx.generate_XLSX(exam_id, programme, title).then(async (cons_sheet) => {
                         
-                //         await analytics.generate_Tables_XLSX(cons_sheet.resultStats, exam_id, programme, title).then(async (tables) => {
-                //             await analytics.fetch_Graphs(cons_sheet.resultStats, title).then(async (graphs) => {
+                        await analytics.generate_Tables_XLSX(cons_sheet.resultStats, exam_id, programme, title).then(async (tables) => {
+                            await analytics.fetch_Graphs(cons_sheet.resultStats, title).then(async (graphs) => {
 
 
                                 res.send({
-                                    // fetch: fetch,
+                                    fetch: fetch,
                                     process: process,
-                //                     obe_sheet: {
-                //                         status: obe_sheet.status,
-                //                         message: obe_sheet.message,
-                //                     },
-                //                     cons_sheet: {
-                //                         status: cons_sheet.status,
-                //                         message: cons_sheet.message,
-                //                     },
-                //                     overall: tables,
-                //                     graphs: graphs,
+                                    obe_sheet: {
+                                        status: obe_sheet.status,
+                                        message: obe_sheet.message,
+                                    },
+                                    cons_sheet: {
+                                        status: cons_sheet.status,
+                                        message: cons_sheet.message,
+                                    },
+                                    overall: tables,
+                                    graphs: graphs,
                                 });
 
 
-                //             }).catch((err) => { res.send(err); })
-                //         }).catch((err) => { res.send(err); });
+                            }).catch((err) => { res.send(err); })
+                        }).catch((err) => { res.send(err); });
 
-                //     }).catch((err) => { res.send(err); });
-                // }).catch((err) => { res.send(err); });
+                    }).catch((err) => { res.send(err); });
+                }).catch((err) => { res.send(err); });
 
 
             }).catch((err) => { res.send(err); });
-        // }).catch((err) => { res.send(err); });
+        }).catch((err) => { res.send(err); });
 
     }
 })
@@ -103,7 +103,7 @@ app.get('/', async (req, res) => {
 
 
 
-app.get('/test', async (req, res) => {
+app.get('/pdf', async (req, res) => {
 
     var dataToSend;
 
@@ -133,5 +133,5 @@ app.get('/test', async (req, res) => {
 
 
 app.listen(process.env.PORT, () => {
-    console.log(`Server listening on port ${process.env.PORT}`)
+    console.log(chalk.cyanBright(`\n--- Server started on port ${process.env.PORT}`));
 })

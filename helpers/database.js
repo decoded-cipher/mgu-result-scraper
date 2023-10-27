@@ -295,4 +295,30 @@ module.exports = {
 
 
 
+    // Delete data from database based on programme
+    deleteDataByDept : async (exam_id, programme) => {
+        return new Promise(async (resolve, reject) => {
+
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
+
+            console.log("--- [deleteDataByDept] --- Deleting data for : " + programme);
+
+            // Delete data from database
+            db.collection(collectionName).deleteMany({ "data.programme": programme }, (err, result) => {
+                if (err) {
+                    console.log(chalk.redBright("--- [deleteDataByDept] --- Error in deleting data: \n"));
+                    reject(err);
+                } else {
+                    console.log(chalk.yellowBright("--- [deleteDataByDept] --- Data deleted successfully: \n"));
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
 }

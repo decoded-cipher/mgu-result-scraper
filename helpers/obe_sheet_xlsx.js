@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
+const chalk = require('chalk');
 const ExcelJS = require('exceljs');
 
 
@@ -145,7 +145,7 @@ module.exports = {
                     
                     
                 }).catch((err) => {
-                    console.log("--- [xlsx - generate_XLSX] --- Error in getting data as array: " + err);
+                    console.log(chalk.redBright("--- [xlsx - generate_XLSX] --- Error in getting data as array: " + err));
                     reject({
                         status: "error",
                         message: "Error in getting data as array: ",
@@ -225,14 +225,14 @@ module.exports = {
 
                 // Write data to XLSX file
                 await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/OBE Datasheet.xlsx')).then(() => {
-                    console.log("--- [xlsx - generate_XLSX] --- OBE Datasheet generated successfully.");
+                    console.log(chalk.greenBright("--- [xlsx - generate_XLSX] --- OBE Datasheet generated successfully."));
                     resolve({
                         status: "success",
                         message: "OBE Datasheet generated successfully.",
                         resultStats: resultStats,
                     });
                 }).catch((err) => {
-                    console.log("--- [xlsx - generate_XLSX] --- Error in writing data to XLSX file: ");
+                    console.log(chalk.redBright("--- [xlsx - generate_XLSX] --- Error in writing data to XLSX file: "));
                     reject({
                         status: "error",
                         message: "Error in writing OBE Datasheet: ",
@@ -243,7 +243,7 @@ module.exports = {
 
                 
             }).catch((err) => {
-                console.log("--- [xlsx - generate_XLSX] --- Error in fetching data from database: " + err);
+                console.log(chalk.redBright("--- [xlsx - generate_XLSX] --- Error in fetching data from database: " + err));
                 reject({
                     status: "error",
                     message: "Error in fetching data from database: ",
