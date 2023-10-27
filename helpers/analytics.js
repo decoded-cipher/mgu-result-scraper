@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const chalk = require('chalk');
 const ExcelJS = require('exceljs');
 const { spawn } = require('child_process');
 
@@ -344,13 +345,13 @@ module.exports = {
 
 
             await workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Analysis.xlsx')).then(() => {
-                console.log("Result Analysis file generated");
+                console.log(chalk.greenBright("--- [table - generate_Tables_XLSX] --- Result Analysis file generated"));
                 resolve({
                     status: "success",
                     message: "Result Analysis (Tables) xlsx generated",
                 });
             }).catch((err) => {
-                console.log(err);
+                console.log(chalk.redBright("--- [table - generate_Tables_XLSX] --- Error generating Result Analysis file"));
                 reject({
                     status: "error",
                     message: "Error generating Result Analysis (Tables) xlsx",
@@ -785,13 +786,13 @@ module.exports = {
 
 
             workbook.xlsx.writeFile(path.join(__dirname, '../public/xlsx/Result Graphs.xlsx')).then(() => {
-                console.log("Result Graphs generated");
+                console.log(chalk.greenBright("--- [graph - generate_Graphs_XLSX] --- Result Analysis file generated"));
                 resolve({
                     status: "success",
                     message: "Result Analysis (Graphs) xlsx generated",
                 });
             }).catch((err) => {
-                console.log(err);
+                console.log(chalk.redBright("--- [graph - generate_Graphs_XLSX] --- Error generating Result Analysis file"));
                 reject({
                     status: "error",
                     message: "Error generating Result Analysis (Graphs) xlsx",
