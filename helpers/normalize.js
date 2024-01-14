@@ -36,7 +36,7 @@ module.exports = {
                                         max: null,
                                     },
                                     external: {
-                                        isa: null,
+                                        esa: null,
                                         max: null,
                                     },
 
@@ -50,8 +50,6 @@ module.exports = {
                                 });
                             });
 
-                        } else {
-                            return;
                         }
 
                         // sort the subjects by course code before pushing

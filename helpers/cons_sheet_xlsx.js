@@ -182,21 +182,31 @@ module.exports = {
                         });
                     }
 
+                    // if any subject was skipped, then highlight the row
+                    for(let i = 0; i < resultStats.subjects.length; i++) {
+                        if(resultStats.subjects[i].skip.index.includes(rowNumber - 6)) {
+
+                            let cell_1 = String.fromCharCode(67 + (i * 2));
+                            let cell_2 = String.fromCharCode(68 + (i * 2));
+
+                            row.getCell(cell_1).fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF0F0F0' },
+                                bgColor: { argb: 'FFF0F0F0' }
+                            }
+                            row.getCell(cell_2).fill = {
+                                type: 'pattern',
+                                pattern: 'solid',
+                                fgColor: { argb: 'FFF0F0F0' },
+                                bgColor: { argb: 'FFF0F0F0' }
+                            }
+
+                        }
+                    }
+
+
                 });
-
-
-                // save resultStats to a file
-                // fs.writeFileSync(path.join(__dirname, '../public/xlsx/analytics.json'), JSON.stringify(resultStats, null, 4), (err) => {
-                //     if (err) {
-                //         console.log("--- [xlsx - generate_XLSX] --- Error in writing resultStats to file: " + err);
-                //         reject({
-                //             status: "error",
-                //             message: "Error in writing resultStats to file: ",
-                //             error: err
-                //         });
-                //     }
-                // });
-
 
 
                 // Write data to XLSX file
@@ -319,6 +329,8 @@ module.exports = {
                 
                 let subject = {
                     marks : [],
+                    isa : [],
+                    esa : [],
                     grade : [],
                 };
 
@@ -328,6 +340,11 @@ module.exports = {
                         count : 0,
                     },
                     fail : {
+                        count : 0,
+                        index : [],
+                        names : [],
+                    },
+                    skip : {
                         count : 0,
                         index : [],
                         names : [],
@@ -347,7 +364,10 @@ module.exports = {
                 for(let j = 0; j < data.length; j++) {
 
                     let markHolder = data[j].data.result.subjects[i].total;
+                    let isaHolder = data[j].data.result.subjects[i].internal.isa;
+                    let esaHolder = data[j].data.result.subjects[i].external.esa;
                     let gradeHolder = data[j].data.result.subjects[i].grade;
+                    let maxHolder = data[j].data.result.subjects[i].max;
 
                     // Count the subject wise grades
                     switch(gradeHolder) {
@@ -380,18 +400,31 @@ module.exports = {
 
                     // Count the subject wise pass and fail
                     if(markHolder === null) {
-                        resultStats.subjects[i].fail.index.push(j);
-                        resultStats.subjects[i].fail.names.push(data[j].data.name);
-                        resultStats.subjects[i].fail.count++;
+
+                        if(maxHolder === null) {
+                            resultStats.subjects[i].skip.index.push(j);
+                            resultStats.subjects[i].skip.names.push(data[j].data.name);
+                            resultStats.subjects[i].skip.count++;
+                        } else {
+                            resultStats.subjects[i].fail.index.push(j);
+                            resultStats.subjects[i].fail.names.push(data[j].data.name);
+                            resultStats.subjects[i].fail.count++;
+                        }
+
                     } else {
                         resultStats.subjects[i].pass.count++;
                     }
                     
                     // Handling null values in the data with "-" and "F"
                     markHolder === null ? markHolder = "-" : markHolder = markHolder;
-                    gradeHolder === null ? gradeHolder = "F" : gradeHolder = gradeHolder;
+                    isaHolder === null ? isaHolder = "-" : isaHolder = isaHolder;
+                    esaHolder === null ? esaHolder = "-" : esaHolder = esaHolder;
+
+                    gradeHolder === null ? (maxHolder === null ? gradeHolder = "-" : gradeHolder = "F") : gradeHolder = gradeHolder;
 
                     subject.marks.push(markHolder);
+                    subject.isa.push(isaHolder);
+                    subject.esa.push(esaHolder);
                     subject.grade.push(gradeHolder);
 
                 }
