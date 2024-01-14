@@ -321,4 +321,78 @@ module.exports = {
 
 
 
+    // Get all subjects based on programme
+    getSubjectsByDept : async (exam_id, programme) => {
+        return new Promise(async (resolve, reject) => {
+
+            console.log("--- [getSubjectsByDept] --- Fetching data for : " + programme);
+
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
+
+            db.collection(collectionName).aggregate([
+                { $match: { "data.programme": programme } },
+                { $unwind: "$data.result.subjects" },
+                {
+                    $group: {
+                        _id: "$data.result.subjects.course_code",
+                        name: { $first: "$data.result.subjects.course" },
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        course_code: "$_id",
+                        course_name: "$name"
+                    }
+                }
+            ]).toArray((err, result) => {
+                if (err) {
+                    console.log(chalk.redBright("--- [getSubjectsByDept] --- Error in fetching data: \n"));
+                    reject(err);
+                } else {
+                    console.log(chalk.yellowBright("--- [getSubjectsByDept] --- Data fetched successfully: \n"));
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
+    // Update any data in database
+    updateWithNormalData : async (exam_id, programme, data) => {
+        return new Promise(async (resolve, reject) => {
+
+            console.log("--- [updateWithNormalData] --- Updating data for : " + programme);
+
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
+
+
+            // Initialize bulk operation
+            let bulk = db.collection(collectionName).initializeUnorderedBulkOp();
+            data.forEach((student) => {
+                bulk.find({ qid: student.qid }).updateOne({ $set: { data: student.data } });
+            });
+
+            // Execute bulk operation
+            bulk.execute((err, result) => {
+                if (err) {
+                    console.log(chalk.redBright("--- [updateWithNormalData] --- Error in updating data: \n"));
+                    reject(err);
+                } else {
+                    console.log(chalk.greenBright("--- [updateWithNormalData] --- Data updated successfully: \n"));
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
 }
