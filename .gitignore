@@ -1,12 +1,12 @@
 node_modules
 .env
 
-public/screenshots
-public/secure_pdfs
-public/analytics
-public/data
-public/xlsx
-public/graphs
+public/screenshots/**
+public/secure_pdfs/**
+public/analytics/**
+public/data/**
+public/xlsx/**
+public/graphs/**
 
 # keep the folder structure
 !public/screenshots/.gitkeep
