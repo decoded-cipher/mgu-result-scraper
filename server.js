@@ -19,11 +19,11 @@ db.connect();
 
 
 
-let exam_id = "114";
-let start_prn = 210021088918;
-let end_prn = 210021088987;
-let programme = "Bachelor of Computer Application";
-let title = "BCA 5th Sem result University Examination Results (21-24)"
+let exam_id = "219";
+let start_prn = 213242210980;
+let end_prn = 213242211039;
+let programme = "Master of Computer Applications - Regular (Revised Scheme)";
+let title = "MCA (Semester III) University Examination Results"
 
 
 
