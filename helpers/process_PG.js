@@ -66,6 +66,7 @@ module.exports = {
         
         // go to the result page
         await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3/422");
+        // This the link for MCA results only. Change the link according to the "Course" on the result page.
         
         await page.selectOption('select#exam_id', exam_id);
         await page.fill('#prn', student_id);
