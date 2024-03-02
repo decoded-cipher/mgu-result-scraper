@@ -12,6 +12,5 @@ public/graphs/**
 !public/screenshots/.gitkeep
 !public/secure_pdfs/.gitkeep
 !public/analytics/.gitkeep
-!public/data/.gitkeep
 !public/xlsx/.gitkeep
 !public/graphs/.gitkeep

@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const chalk = require('chalk');
 
 const db = require('./config/db');
-const data = require('./public/data/new_test.json');
+// const data = require('./public/data/new_test.json');
 
 const utils = require('./helpers/utils.js');
 const process_ug = require('./helpers/process_UG.js');
