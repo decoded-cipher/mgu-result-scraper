@@ -393,7 +393,10 @@ module.exports = {
                             resultStats.subjects[i].grades["D"]++;
                             break;
                         default:
-                            resultStats.subjects[i].grades["F"]++;
+
+                            if(markHolder === null && maxHolder !== null) {
+                                resultStats.subjects[i].grades["F"]++;
+                            }
                     }
 
                     resultStats.subjects[i].name = data[j].data.result.subjects[i].course;
