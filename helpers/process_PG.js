@@ -35,11 +35,19 @@ module.exports = {
             let qid = generateQid(i, exam_id);
             let result = await checkQid(exam_id, qid);
 
+            // check if a folder with the name as student_id exists inside public/analytics
+            // if it does then skip data processing
+            
             if (result) {
                 console.log("--- [processAllResults] --- Data already present in database. Skip data processing...\n");
             } else {
                 console.log(`--- [processAllResults] --- Processing result for ${i}`);
-                await module.exports.processResult(i, exam_id, qid);
+                
+                if (fs.existsSync(path.join(__dirname, `../public/analytics/${i}`))) {
+                    await module.exports.processResult(i, exam_id, qid);
+                } else {
+                    console.log(chalk.redBright(`--- [processAllResults] --- Result not found for ${i} \n`));
+                }
             }
 
         }
@@ -57,15 +65,20 @@ module.exports = {
         await page.setViewportSize({ width: 1000, height: 850 });
         
         // go to the result page
-        await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3");
+        await page.goto("https://pareeksha.mgu.ac.in/Pareeksha/index.php/Public/PareekshaResultView_ctrl/index/3/422");
+        // This the link for MCA results only. Change the link according to the "Course" on the result page.
         
         await page.selectOption('select#exam_id', exam_id);
         await page.fill('#prn', student_id);
-        await page.click('button#btnresult');
+        await page.click('input#btnresult');
+
+        
+        // wait for 2 seconds
+        await page.waitForTimeout(2000);
 
         try {
-            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true });
-            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true });
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(3)', { visible: true, timeout: 10000 });
+            await page.waitForSelector('div#mgu_btech_contentholder table:nth-child(4)', { visible: true, timeout: 10000 });
             console.log(chalk.greenBright(`--- [fetchResult] --- Result loaded for ${student_id} \n`));
         } catch (err) {
             console.log(chalk.redBright(`--- [fetchResult] --- Result not found for ${student_id} \n`));
@@ -73,8 +86,6 @@ module.exports = {
             return;
         }
 
-        // // wait for 2 seconds
-        // await page.waitForTimeout(1000);
 
         // get the result table
         const studentDetails = await page.$('div#mgu_btech_contentholder table:nth-child(3)');

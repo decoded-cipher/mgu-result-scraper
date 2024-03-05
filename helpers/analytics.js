@@ -24,7 +24,6 @@ module.exports = {
             let subjectPassFailCount = await getSubjectPassFailCount(exam_id, programme);
             let subjectToppers = await getAllSubjectToppers(exam_id, programme);
 
-
             const workbook = new ExcelJS.Workbook();
             const worksheet = workbook.addWorksheet('Analysis', {
                 pageSetup: {
@@ -180,52 +179,59 @@ module.exports = {
             // ------------------------------ Subject-wise Toppers Table ------------------------------ //
 
 
+            let extraRows = 0;
+            data.subjects.length > classTop5.length ? extraRows = data.subjects.length : extraRows = classTop5.length;
 
-            worksheet.mergeCells('A' + (15 + data.subjects.length + classTop5.length) + ':M' + (15 + data.subjects.length + classTop5.length));
-            worksheet.getCell('A' + (15 + data.subjects.length + classTop5.length)).value = 'Subject-wise Toppers List';
+            extraRows = 9 + extraRows + data.subjects.length + 5;
 
-            worksheet.mergeCells('A' + (16 + data.subjects.length + classTop5.length) + ':E' + (16 + data.subjects.length + classTop5.length));
-            worksheet.getCell('A' + (16 + data.subjects.length + classTop5.length)).value = 'Subjects';
+            worksheet.mergeCells('A' + extraRows + ':M' + extraRows);
+            worksheet.getCell('A' + extraRows).value = 'Subject-wise Toppers List';
 
-            worksheet.mergeCells('F' + (16 + data.subjects.length + classTop5.length) + ':H' + (16 + data.subjects.length + classTop5.length));
-            worksheet.getCell('F' + (16 + data.subjects.length + classTop5.length)).value = 'Name of the Student';
+            extraRows += 1;
 
-            worksheet.getCell('I' + (16 + data.subjects.length + classTop5.length)).value = 'Marks';
-            worksheet.getCell('J' + (16 + data.subjects.length + classTop5.length)).value = 'Grade';
+            worksheet.mergeCells('A' + extraRows + ':E' + extraRows);
+            worksheet.getCell('A' + extraRows).value = 'Subjects';
 
-            worksheet.mergeCells('K' + (16 + data.subjects.length + classTop5.length) + ':M' + (16 + data.subjects.length + classTop5.length));
-            worksheet.getCell('K' + (16 + data.subjects.length + classTop5.length)).value = 'Name of the Teacher';
+            worksheet.mergeCells('F' + extraRows + ':H' + extraRows);
+            worksheet.getCell('F' + extraRows).value = 'Name of the Student';
 
-            let startRow, endRow, extraRows = 0;
+            worksheet.getCell('I' + extraRows).value = 'Marks';
+            worksheet.getCell('J' + extraRows).value = 'Grade';
+
+            worksheet.mergeCells('K' + extraRows + ':M' + extraRows);
+            worksheet.getCell('K' + extraRows).value = 'Name of the Teacher';
+
+            extraRows += 1;
+            
+            let startRow = endRow = extraRows;
+
 
             for (let i = 0; i < subjectToppers.length; i++) {
-
-                startRow = 17 + data.subjects.length + classTop5.length + i;
-                endRow = 17 + data.subjects.length + classTop5.length + i;
-
-                startRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
-                extraRows += subjectToppers[i].count - 1;
-                endRow = 17 + data.subjects.length + classTop5.length + i + extraRows;
-
-                worksheet.mergeCells('A' + (startRow) + ':E' + (endRow));
-                worksheet.getCell('A' + (startRow)).value = subjectToppers[i].course;
 
                 for (let j = 0; j < subjectToppers[i].toppers.length; j++) {
                     worksheet.mergeCells('F' + (startRow + j) + ':H' + (startRow + j));
                     worksheet.getCell('F' + (startRow + j)).value = subjectToppers[i].toppers[j].name;
+                    
+                    endRow = startRow + j;
+                    // break;
                 }
-
-                worksheet.mergeCells('I' + (startRow) + ':I' + (endRow));
-                worksheet.getCell('I' + (startRow)).value = subjectToppers[i].marks;
-
-                worksheet.mergeCells('J' + (startRow) + ':J' + (endRow));
-                worksheet.getCell('J' + (startRow)).value = subjectToppers[i].grade;
-
-                worksheet.mergeCells('K' + (startRow) + ':M' + (endRow));
-                worksheet.getCell('K' + (startRow)).value = "Not Available";
-
+                
+                worksheet.mergeCells('A' + (startRow) + ':E' + (endRow));
+                worksheet.getCell('A' + (startRow)).value = subjectToppers[i].course_name;
+                
+                worksheet.mergeCells('I' + startRow + ':I' + endRow);
+                worksheet.getCell('I' + startRow).value = subjectToppers[i].total;
+                
+                worksheet.mergeCells('J' + startRow + ':J' + endRow);
+                worksheet.getCell('J' + startRow).value = subjectToppers[i].grade;
+                
+                worksheet.mergeCells('K' + startRow + ':M' + endRow);
+                worksheet.getCell('K' + startRow).value = "Not Available";
+                
+                startRow = endRow + 1;
+                // break;
             }
-
+            
 
 
             // ------------------------------ Styling ------------------------------ //

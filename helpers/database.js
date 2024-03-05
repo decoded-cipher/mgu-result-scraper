@@ -168,7 +168,7 @@ module.exports = {
 
 
 
-    // get subject wise top marks
+    // get subject wise top marks for all subjects
     getSubjectTopMarks : async (exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
@@ -178,20 +178,24 @@ module.exports = {
             console.log("--- [getSubjectTopMarks] --- Fetching data for : " + programme);
 
             db.collection(collectionName).aggregate([
+
                 { $match: { "data.programme": programme } },
                 { $unwind: "$data.result.subjects" },
                 {
                     $group: {
-                        _id: "$data.result.subjects.course",
-                        result: { $max: "$data.result.subjects" }
+                        _id: { course_code: "$data.result.subjects.course_code", course: "$data.result.subjects.course" },
+                        result: { $max: "$data.result.subjects.total" }
                     }
                 },
                 {
                     $project: {
                         _id: 0,
-                        result: 1
+                        course_code: "$_id.course_code",
+                        course_name: "$_id.course",
+                        total: "$result"
                     }
-                }
+                },
+                { $sort: { course_code: 1 } }
 
             ]).toArray(async (err, topMarks) => {
                 if (err) {
@@ -215,39 +219,24 @@ module.exports = {
 
             console.log("--- [getAllSubjectToppers] --- Fetching data for : " + programme);
 
-            // get subject wise top marks first
-            let topMarks = await module.exports.getSubjectTopMarks(exam_id, programme);
+            let subjectTopMarks = await module.exports.getSubjectTopMarks(exam_id, programme);
 
-            let topMarkHolders = [];
+            let topperList = [];
 
-            // get subject wise toppers
-            for (let i = 0; i < topMarks.length; i++) {
-                let result = await module.exports.getSubjectTopper(topMarks[i].result.course, topMarks[i].result.total, exam_id, programme);
-                topMarkHolders.push(result);
+            for (let i = 0; i < subjectTopMarks.length; i++) {
+                let data = await module.exports.getSubjectTopper(subjectTopMarks[i], exam_id, programme);
+                let item = {
+                    course_code: subjectTopMarks[i].course_code,
+                    course_name: subjectTopMarks[i].course_name,
+                    total: subjectTopMarks[i].total,
+                    grade: data.grade,
+                    toppers: data.toppers
+                }
+                topperList.push(item);
             }
 
-            console.log(chalk.yellowBright("--- [getAllSubjectToppers] --- Data fetched successfully: \n"));
-
-            topMarkHolders.forEach((sub, index) => {
-                let item = {
-                    course: topMarks[index].result.course,
-                    count: sub.length,
-                    marks: topMarks[index].result.total,
-                    grade: topMarks[index].result.grade,
-                    toppers: []
-                }
-
-                sub.forEach((student) => {
-                    item.toppers.push({
-                        name: student.name,
-                        prn: student.prn
-                    });
-                });
-
-                topMarkHolders[index] = item;
-            });
-
-            resolve(topMarkHolders);
+            // console.log(topperList);
+            resolve(topperList);
 
         });
 
@@ -256,7 +245,7 @@ module.exports = {
 
 
     // get subject wise topper
-    getSubjectTopper : async (course, total, exam_id, programme) => {
+    getSubjectTopper : async (subject, exam_id, programme) => {
         return new Promise(async (resolve, reject) => {
 
             // Generate collection name
@@ -265,27 +254,33 @@ module.exports = {
             console.log("--- [getSubjectTopper] --- Fetching data for : " + programme);
 
             db.collection(collectionName).aggregate([
+
                 { $match: { "data.programme": programme } },
                 { $unwind: "$data.result.subjects" },
-                { $match: { "data.result.subjects.course": course, "data.result.subjects.total": total } },
+                { $match: { "data.result.subjects.course_code": subject.course_code, "data.result.subjects.total": subject.total } },
+
+                {
+                    $group: {
+                        _id: null,
+                        toppers: { $push: { name: "$data.name", prn: "$data.prn" } },
+                        grade: { $first: "$data.result.subjects.grade" }
+                    }
+                },
                 {
                     $project: {
                         _id: 0,
-                        name: "$data.name",
-                        prn: "$data.prn",
-                        grade: "$data.result.subjects.grade",
-                        course: "$data.result.subjects.course",
-                        marks: "$data.result.subjects.total"
+                        toppers: 1,
+                        grade: 1
                     }
                 }
 
-            ]).toArray((err, result) => {
+            ]).toArray(async (err, topper) => {
                 if (err) {
                     console.log(chalk.redBright("--- [getSubjectTopper] --- Error in fetching data: \n"));
                     reject(err);
                 } else {
                     console.log(chalk.yellowBright("--- [getSubjectTopper] --- Data fetched successfully: \n"));
-                    resolve(result);
+                    resolve(topper[0]);
                 }
             });
 
@@ -311,6 +306,81 @@ module.exports = {
                     reject(err);
                 } else {
                     console.log(chalk.yellowBright("--- [deleteDataByDept] --- Data deleted successfully: \n"));
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
+    // Get all subjects based on programme
+    getSubjectsByDept : async (exam_id, programme) => {
+        return new Promise(async (resolve, reject) => {
+
+            console.log("--- [getSubjectsByDept] --- Fetching data for : " + programme);
+
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
+
+            db.collection(collectionName).aggregate([
+                { $match: { "data.programme": programme } },
+                { $unwind: "$data.result.subjects" },
+                {
+                    $group: {
+                        _id: "$data.result.subjects.course_code",
+                        name: { $first: "$data.result.subjects.course" },
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0,
+                        course_code: "$_id",
+                        course_name: "$name"
+                    }
+                },
+                { $sort: { course_code: 1 } }
+            ]).toArray((err, result) => {
+                if (err) {
+                    console.log(chalk.redBright("--- [getSubjectsByDept] --- Error in fetching data: \n"));
+                    reject(err);
+                } else {
+                    console.log(chalk.yellowBright("--- [getSubjectsByDept] --- Data fetched successfully: \n"));
+                    resolve(result);
+                }
+            });
+
+        });
+
+    },
+
+
+
+    // Update any data in database
+    updateWithNormalData : async (exam_id, programme, data) => {
+        return new Promise(async (resolve, reject) => {
+
+            console.log("--- [updateWithNormalData] --- Updating data for : " + programme);
+
+            // Generate collection name
+            let collectionName = "exam_" + exam_id;
+
+
+            // Initialize bulk operation
+            let bulk = db.collection(collectionName).initializeUnorderedBulkOp();
+            data.forEach((student) => {
+                bulk.find({ qid: student.qid }).updateOne({ $set: { data: student.data } });
+            });
+
+            // Execute bulk operation
+            bulk.execute((err, result) => {
+                if (err) {
+                    console.log(chalk.redBright("--- [updateWithNormalData] --- Error in updating data: \n"));
+                    reject(err);
+                } else {
+                    console.log(chalk.greenBright("--- [updateWithNormalData] --- Data updated successfully: \n"));
                     resolve(result);
                 }
             });
