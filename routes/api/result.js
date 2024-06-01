@@ -9,18 +9,28 @@ const verifyToken = require('../../middleware/authentication');
 
 /**
  * @route   GET /api/v4/result
- * @desc    Get all results
+ * @desc    Get all results with pagination
  * @access  Authenticated
+ * @params  page, limit, search
  * @return  message, data
  * @error   400, { error }
  * @status  200, 400
  * 
- * @example /api/v4/result
+ * @example /api/v4/result?page=1&limit=10&search=keyword
 **/
 
 router.get('/', verifyToken, async (req, res) => {
 
-    let totalResults = await Result.countDocuments()
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    let search = req.query.search || null;
+
+    let query = {};
+    if (search) {
+        query = { $text: { $search: search } };
+    }
+
+    let totalResults = await Result.countDocuments(query)
         .catch(err => {
             res.status(400).json({
                 status: 400,
@@ -29,7 +39,10 @@ router.get('/', verifyToken, async (req, res) => {
             });
         });
 
-    let results = await Result.find()
+    let results = await Result.find(query)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select('-__v -_id')
         .catch(err => {
             res.status(400).json({
                 status: 400,
@@ -44,7 +57,11 @@ router.get('/', verifyToken, async (req, res) => {
         data: {
             results: results,
             meta: {
-                total: totalResults
+                page: page,
+                limit: limit,
+                pages: Math.ceil(totalResults / limit),
+                total: totalResults,
+                search: search
             }
         }
     });
