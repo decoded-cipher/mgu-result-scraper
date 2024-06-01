@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const Exam = require('../../models/exam');
+const { fetchExams } = require('../../helpers/exam_list');
 const verifyToken = require('../../middleware/authentication');
 
 
@@ -30,6 +31,7 @@ router.get('/', verifyToken, async (req, res) => {
         });
 
     let exams = await Exam.find()
+        .select('-_id exam_id title')
         .catch(err => {
             res.status(400).json({
                 status: 400,
@@ -48,6 +50,69 @@ router.get('/', verifyToken, async (req, res) => {
             }
         }
     });
+
+});
+
+
+
+/**
+ * @route   POST /api/v4/exam
+ * @desc    Scrape and insert exams as bulk
+ * @access  Authenticated
+ * @return  message, data
+ * @error   400, { error }
+ * @status  201, 400
+ * 
+ * @example /api/v4/exam
+**/
+
+router.post('/', verifyToken, async (req, res) => {
+    
+    await fetchExams()
+        .then(async (exam_list) => {
+
+            // check if any exams are already present. If so, insert only the new exams
+            let existingExams = await Exam.find();
+            let existingExamIds = existingExams.map(exam => exam.exam_id);
+            let newExams = exam_list.filter(exam => !existingExamIds.includes(exam.exam_id));
+
+            // insert only the new exams
+            if (newExams.length > 0) {
+                await Exam.insertMany(newExams)
+                    .then(exams => {
+                        res.status(201).json({
+                            status: 201,
+                            message: 'Exams inserted successfully',
+                            data: {
+                                exams: exams
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        res.status(400).json({
+                            status: 400,
+                            message: 'Error inserting exams',
+                            error: err
+                        });
+                    });
+            } else {
+                res.status(200).json({
+                    status: 200,
+                    message: 'No new exams to insert',
+                    data: {
+                        exams: []
+                    }
+                });
+            }
+
+        })
+        .catch(err => {
+            res.status(400).json({
+                status: 400,
+                message: 'Error fetching exams',
+                error: err
+            });
+        });
 
 });
 
