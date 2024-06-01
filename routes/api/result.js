@@ -2,49 +2,49 @@
 const express = require('express');
 const router = express.Router();
 
-const Exam = require('../../models/exam');
+const Result = require('../../models/result');
 const verifyToken = require('../../middleware/authentication');
 
 
 
 /**
- * @route   GET /api/v4/exam
- * @desc    Get all exams
+ * @route   GET /api/v4/result
+ * @desc    Get all results
  * @access  Authenticated
  * @return  message, data
  * @error   400, { error }
  * @status  200, 400
  * 
- * @example /api/v4/exam
+ * @example /api/v4/result
 **/
 
 router.get('/', verifyToken, async (req, res) => {
 
-    let totalExams = await Exam.countDocuments()
+    let totalResults = await Result.countDocuments()
         .catch(err => {
             res.status(400).json({
                 status: 400,
-                message: 'Error retrieving exams',
+                message: 'Error retrieving results',
                 error: err
             });
         });
 
-    let exams = await Exam.find()
+    let results = await Result.find()
         .catch(err => {
             res.status(400).json({
                 status: 400,
-                message: 'Error retrieving exams',
+                message: 'Error retrieving results',
                 error: err
             });
         });
 
     res.status(200).json({
         status: 200,
-        message: 'Exams retrieved successfully',
+        message: 'Results retrieved successfully',
         data: {
-            exams: exams,
+            results: results,
             meta: {
-                total: totalExams
+                total: totalResults
             }
         }
     });
