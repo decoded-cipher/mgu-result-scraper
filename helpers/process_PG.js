@@ -8,59 +8,28 @@ const { saveData, checkQid, generateQid } = require('./database.js');
 
 module.exports = {
 
-    fetchAllResults : async (start_prn, end_prn, exam_id) => {
-        for (let i = start_prn; i <= end_prn; i++) {
-
-            let qid = generateQid(i, exam_id);
-            let result = await checkQid(exam_id, qid);
-
-            if (result) {
-                console.log("--- [fetchAllResults] --- Data already present in database. Skipping data fetch... \n");
-            } else {
-                console.log(`--- [fetchAllResults] --- Fetching result for ${i}`);
-                await module.exports.fetchResult(String(i), exam_id);
-            }
-
-        }
-        console.log(chalk.greenBright("\n--- [fetchAllResults] --- All results fetched \n"));
-    },
-
-
-
-
-
-    processAllResults : async (start_prn, end_prn, exam_id) => {
-        for (let i = start_prn; i <= end_prn; i++) {
-
-            let qid = generateQid(i, exam_id);
-            let result = await checkQid(exam_id, qid);
-
-            // check if a folder with the name as student_id exists inside public/analytics
-            // if it does then skip data processing
-            
-            if (result) {
-                console.log("--- [processAllResults] --- Data already present in database. Skip data processing...\n");
-            } else {
-                console.log(`--- [processAllResults] --- Processing result for ${i}`);
-                
-                if (fs.existsSync(path.join(__dirname, `../public/analytics/${i}`))) {
-                    await module.exports.processResult(i, exam_id, qid);
-                } else {
-                    console.log(chalk.redBright(`--- [processAllResults] --- Result not found for ${i} \n`));
-                }
-            }
-
-        }
-        console.log(chalk.greenBright("\n--- [processAllResults] --- All results processed \n"));
-    },
-
 
 
 
 
     fetchResult : async (student_id, exam_id) => {
 
-        let browser = await chromium.launch();
+        let qid = generateQid(student_id, exam_id);
+        let result = await checkQid(exam_id, qid);
+
+        if (result) {
+            console.log("--- [fetchResult] --- Data already present in database. Skipping data fetch... \n");
+            return;
+        } else {
+            console.log(chalk.greenBright(`--- [fetchResult] --- Fetching result for ${student_id}`));
+        }
+
+        
+        // launch the browser and create a new page
+        let browser = await chromium.launch({
+            executablePath: process.env.CHROMIUM_PATH,
+            headless: true
+        });
         let page = await browser.newPage();
         await page.setViewportSize({ width: 1000, height: 850 });
         
@@ -69,7 +38,7 @@ module.exports = {
         // This the link for MCA results only. Change the link according to the "Course" on the result page.
         
         await page.selectOption('select#exam_id', exam_id);
-        await page.fill('#prn', student_id);
+        await page.fill('#prn', String(student_id));
         await page.click('input#btnresult');
 
         
@@ -115,6 +84,8 @@ module.exports = {
         // close the browser instance ASAP
         await browser.close();
 
+        return qid;
+
     },
 
 
@@ -123,10 +94,20 @@ module.exports = {
 
     processResult : async (student_id, exam_id, qid) => {
 
+        // check if a folder with the name as student_id exists inside public/analytics
+        // if it does then skip data processing
+
+        if (!fs.existsSync(path.join(__dirname, `../public/analytics/${student_id}`))) {
+            console.log(chalk.redBright(`--- [processResult] --- Result not found for ${student_id} \n`));
+            return;
+        }
+
+        console.log(`--- [processResult] --- Processing result for ${student_id}`);
+
+
         let allSubjects = [];
         let semester = {};
         let flag = false;
-
 
         // get table html from the file
         let html = fs.readFileSync(path.join(__dirname, `../public/analytics/${student_id}/result.html`), 'utf8');
@@ -278,6 +259,11 @@ module.exports = {
 
         // save the semester object to the database
         await saveData(semester, exam_id, qid);
+
+        // remove the folder with the name as student_id inside public/analytics
+        fs.rmSync(path.join(__dirname, `../public/analytics/${student_id}`), { recursive: true });
+
+        return;
 
     },
 

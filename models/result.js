@@ -9,9 +9,19 @@ const ResultSchema = new mongoose.Schema({
         unique: true,
         default: () => nanoid()
     },
+    mode: {
+        type: String,
+        required: true,
+        default: 'batch',
+        enum: ['batch', 'single']
+    },
     batch_id: {
         type: String,
-        required: true
+        required: false
+    },
+    prn: {
+        type: String,
+        required: false
     },
     exam_id: {
         type: String,
@@ -24,6 +34,17 @@ const ResultSchema = new mongoose.Schema({
     requested_by: {
         type: String,
         required: false
+    },
+    status: {
+        type: String,
+        required: false,
+        default: 'pending',
+        enum: ['pending', 'in-progress', 'completed', 'failed']
+    },
+    jobs: {
+        type: Array,
+        required: false,
+        default: []
     },
     created_at: {
         type: Date,

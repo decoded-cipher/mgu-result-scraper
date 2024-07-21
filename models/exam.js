@@ -10,6 +10,18 @@ const ExamSchema = new mongoose.Schema({
         type: String,
         required: false
     },
+    mode: {
+        type: String,
+        required: true,
+        default: 'UG',
+        enum: ['UG', 'PG']
+    },
+
+    // programme: {
+    //     type: String,
+    //     required: false
+    // },
+    
     created_at: {
         type: Date,
         required: false,

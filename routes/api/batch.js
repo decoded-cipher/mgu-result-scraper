@@ -19,7 +19,7 @@ const verifyToken = require('../../middleware/authentication');
  * @example /api/v4/batch?page=1&limit=10&search=keyword
 **/
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', async (req, res) => {
 
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
@@ -82,7 +82,7 @@ router.get('/', verifyToken, async (req, res) => {
  * @example /api/v4/batch
 **/
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', async (req, res) => {
     const newBatch = new Batch({
         title: req.body.title,
         description: req.body.description,
@@ -121,7 +121,7 @@ router.post('/', verifyToken, async (req, res) => {
  * @example /api/v4/batch/123456
 **/
 
-router.patch('/:id', verifyToken, async (req, res) => {
+router.patch('/:id', async (req, res) => {
     const batchId = req.params.id;
 
     await Batch.findOneAndUpdate({ batch_id: batchId }, {
