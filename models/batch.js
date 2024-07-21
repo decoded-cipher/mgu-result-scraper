@@ -22,6 +22,7 @@ const BatchSchema = new mongoose.Schema({
         required: false
     },
     prn: {
+        // Will be an array of PRNs of students in the batch
         type: Array,
         required: true,
         default: []

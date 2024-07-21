@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 const Result = require('../../models/result');
+const { fetchProcessResults } = require('../../helpers/index.js');
 const verifyToken = require('../../middleware/authentication');
 
 
@@ -19,7 +20,7 @@ const verifyToken = require('../../middleware/authentication');
  * @example /api/v4/result?page=1&limit=10&search=keyword
 **/
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', async (req, res) => {
 
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
@@ -65,6 +66,65 @@ router.get('/', verifyToken, async (req, res) => {
             }
         }
     });
+
+});
+
+
+
+/**
+ * @route   POST /api/v4/result
+ * @desc    Generate new result
+ * @access  Authenticated
+ * @params  mode, batch_id, prn, batch, requested_by
+ * @return  message, data
+ * @error   400, { error }
+ * @status  201, 400
+ * 
+ * @example /api/v4/result
+**/
+
+router.post('/', async (req, res) => {
+
+    let mode = req.body.mode;
+    let batch_id = req.body.batch_id || null;
+    let prn = req.body.prn || null;
+    let exam_id = req.body.exam_id;
+    let title = req.body.title;
+    
+    let result_id = null;
+
+    // const newResult = new Result({
+    //     mode: mode,            // mode: 'batch' or 'single' - required
+    //     batch_id: batch_id,    // batch_id: 'batch_id' or null - required if mode is 'batch'
+    //     prn: prn,              // prn: 'prn' or null - required if mode is 'single'
+
+    //     exam_id: exam_id,
+    //     user_id: req.body.user_id,
+    //     requested_by: req.body.requested_by
+    // });
+
+    // await newResult.save()
+    //     .then(result => {
+
+    //         result_id = result.result_id;
+            
+    //         res.status(201).json({
+    //             status: 201,
+    //             message: 'Result generated successfully',
+    //             data: result
+    //         });
+    //     })
+    //     .catch(err => {
+    //         res.status(400).json({
+    //             status: 400,
+    //             message: 'Error generating result',
+    //             error: err
+    //         });
+    //     });
+
+
+    // mode, batch_id, prn, exam_id, title
+    await fetchProcessResults(mode, batch_id, null, exam_id, null);
 
 });
 

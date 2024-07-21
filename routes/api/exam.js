@@ -19,7 +19,7 @@ const verifyToken = require('../../middleware/authentication');
  * @example /api/v4/exam
 **/
 
-router.get('/', verifyToken, async (req, res) => {
+router.get('/', async (req, res) => {
 
     let totalExams = await Exam.countDocuments()
         .catch(err => {
@@ -66,9 +66,20 @@ router.get('/', verifyToken, async (req, res) => {
  * @example /api/v4/exam
 **/
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/', async (req, res) => {
+
+    let mode = req.body.mode || 'UG';
+
+    if (mode !== 'UG' && mode !== 'PG') {
+        res.status(400).json({
+            status: 400,
+            message: 'Invalid mode',
+            error: 'Mode must be either UG or PG'
+        });
+        return;
+    }
     
-    await fetchExams()
+    await fetchExams(mode)
         .then(async (exam_list) => {
 
             // check if any exams are already present. If so, insert only the new exams

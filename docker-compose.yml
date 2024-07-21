@@ -1,0 +1,44 @@
+
+version: '3.8'
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mgu-result-scrapper
+
+  server:
+    build: .
+    container_name: server
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/app
+      - public:/app/public
+    networks:
+      - mgu-result-scrapper
+
+networks:
+  mgu-result-scrapper:
+    driver: bridge
+
+volumes:
+  rabbitmq-data:
+  public:

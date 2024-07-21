@@ -4,6 +4,9 @@ require('dotenv').config();
 const db = require('./config/db');
 db.connect();
 
+const { connectRabbitMQ } = require('./config/queue');
+connectRabbitMQ();
+
 const chalk = require('chalk');
 
 const express = require('express');

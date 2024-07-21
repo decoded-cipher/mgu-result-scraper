@@ -11,7 +11,10 @@ let htmlToSend = fs.readFileSync(htmlTemplate, 'utf8').toString();
 module.exports = {
 
     fetchExamDetails : async () => {
-        let browser = await chromium.launch();
+        let browser = await chromium.launch({
+            executablePath: process.env.CHROMIUM_PATH,
+            headless: true
+        });
         let page = await browser.newPage();
         await page.setViewportSize({ width: 1000, height: 850 });
 
