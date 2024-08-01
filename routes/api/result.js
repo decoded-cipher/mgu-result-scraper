@@ -93,34 +93,34 @@ router.post('/', async (req, res) => {
     
     let result_id = null;
 
-    // const newResult = new Result({
-    //     mode: mode,            // mode: 'batch' or 'single' - required
-    //     batch_id: batch_id,    // batch_id: 'batch_id' or null - required if mode is 'batch'
-    //     prn: prn,              // prn: 'prn' or null - required if mode is 'single'
+    const newResult = new Result({
+        mode: mode,            // mode: 'batch' or 'single' - required
+        batch_id: batch_id,    // batch_id: 'batch_id' or null - required if mode is 'batch'
+        prn: prn,              // prn: 'prn' or null - required if mode is 'single'
 
-    //     exam_id: exam_id,
-    //     user_id: req.body.user_id,
-    //     requested_by: req.body.requested_by
-    // });
+        exam_id: exam_id,
+        user_id: req.body.user_id,
+        requested_by: req.body.requested_by
+    });
 
-    // await newResult.save()
-    //     .then(result => {
+    await newResult.save()
+        .then(result => {
 
-    //         result_id = result.result_id;
+            result_id = result.result_id;
             
-    //         res.status(201).json({
-    //             status: 201,
-    //             message: 'Result generated successfully',
-    //             data: result
-    //         });
-    //     })
-    //     .catch(err => {
-    //         res.status(400).json({
-    //             status: 400,
-    //             message: 'Error generating result',
-    //             error: err
-    //         });
-    //     });
+            res.status(201).json({
+                status: 201,
+                message: 'Started fetching results',
+                data: result
+            });
+        })
+        .catch(err => {
+            res.status(400).json({
+                status: 400,
+                message: 'Error fetching results',
+                error: err
+            });
+        });
 
 
     // mode, batch_id, prn, exam_id, title

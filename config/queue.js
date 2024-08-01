@@ -43,6 +43,9 @@ async function initializeQueue() {
     });
     console.log('--- Queues initialized');
 
+    // Prefetch 2 messages. This means that RabbitMQ won't send more than 2 messages to a worker at a time.
+    channel.prefetch(2);
+
     consumeQueue();
 }
 
