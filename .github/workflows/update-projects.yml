@@ -1,0 +1,24 @@
+name: Update Projects
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  version-bump:
+    name: Update Projects
+    runs-on: ubuntu-latest
+    steps:
+       - name: Checkout Source
+         uses: actions/checkout@v2
+       - name: Pull the latest changes
+         run: |
+            git config user.name cipherbot
+            git config user.email bot@arjunkrishna.dev
+            git submodule update --remote --init || true
+       - name: Commit changes
+         run: |
+            git add --all || true
+            git commit -m "Submodule update" || true
+            git push --quiet
+       - name: Repository keepalive 
+         uses: gautamkrishnar/keepalive-workflow@master
