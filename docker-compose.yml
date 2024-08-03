@@ -22,18 +22,38 @@ services:
       - mgu-result-scrapper
 
   server:
-    build: .
+    build: ./server
     container_name: server
     depends_on:
       rabbitmq:
         condition: service_healthy
     ports:
-      - 5000:5000
+      - 3000:3000
     volumes:
-      - .:/app
-      - public:/app/public
+      - .:/app/server
+      - public:/app/server/public
     networks:
       - mgu-result-scrapper
+
+  # client:
+  #   build: ./client
+  #   container_name: client
+  #   ports:
+  #     - 5173:80
+  #   volumes:
+  #     - .:/app/client
+  #   networks:
+  #     - mgu-result-scrapper
+
+  # pdf-transcoder:
+  #   build: ./pdf-transcoder
+  #   container_name: pdf-transcoder
+  #   ports:
+  #     - 5000:5000
+  #   volumes:
+  #     - .:/app/pdf-transcoder
+  #   networks:
+  #     - mgu-result-scrapper
 
 networks:
   mgu-result-scrapper:

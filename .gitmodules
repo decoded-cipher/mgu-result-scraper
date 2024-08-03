@@ -1,3 +1,6 @@
 [submodule "client"]
 	path = client
 	url = https://github.com/inovus-labs/mgu-rs-client
+[submodule "pdf-transcoder"]
+	path = pdf-transcoder
+	url = https://github.com/inovus-labs/pdf-transcoder
